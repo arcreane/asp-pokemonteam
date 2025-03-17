@@ -85,5 +85,38 @@ public class Pokemon
         this.evolveTo = evolveTo;
     }
     
-    
+    /// <summary>
+    /// Uses a skill on a target Pokémon.
+    /// - Checks if the attacker has enough Power Points (PP).
+    /// - Applies the type multiplier based on the target's Pokémon type(s).
+    /// - Calculates damage considering the attacker's strength and the target's defense.
+    /// - Ensures a minimum of 1 damage is dealt.
+    /// - Reduces the target's health points accordingly.
+    /// - Displays a message indicating the skill used and the damage dealt.
+    /// - Throws an exception if there are not enough PP to use the skill.
+    /// </summary>
+    /// <param name="skill">The skill being used.</param>
+    /// <param name="target">The Pokémon receiving the attack.</param>
+    /// <exception cref="NotEnoughPowerPointsException">Thrown when there are no PP left for the skill.</exception>
+    useSkill(Skill skill, Pokemon target)
+    {
+        if(skill.powerPoints > 0)
+        {
+            TypeChart typeChart = new TypeChart(Skill.type);
+
+            skill.powerPoints--;
+
+            double typeMultiplier = typeChart.multiplier(target.types);
+            
+            double damage = (skill.damage * (strength / target.defense)) * typeMultiplier;
+            
+            target.healthPoint -= (int)Math.Max(1, damage);
+            
+            Console.WriteLine($"{name} used {skill.name} on {target.name}: -{(int)Math.Max(1, damage)} HP!");
+        }
+        else
+        {
+            throw new NotEnoughPowerPointsException("Not enough power points to use this skill.");
+        }
+    }
 }
