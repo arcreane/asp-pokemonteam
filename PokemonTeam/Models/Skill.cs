@@ -1,11 +1,31 @@
 ﻿namespace PokemonTeam.Models
 {
-    // La classe Skill représente une compétence avec les attributs suivants :
-    // - Name : le nom de la compétence (string)
-    // - Type : le type de la compétence (string)
-    // - Damage : les dégâts infligés (int)
-    // - PowerPoint : le nombre de points de pouvoir (int)
-    // - Accuracy : la précision de la compétence (int)
+    /// <summary>
+    /// La classe Skill représente une compétence.
+    /// </summary>
+    /// <remarks>
+    /// Attributs :
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><see cref="Name"/> : le nom de la compétence (string)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="Type"/> : le type de la compétence (string)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="Damage"/> : les dégâts infligés (int)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="PowerPoint"/> : le nombre de points de pouvoir (int)</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="Accuracy"/> : la précision de la compétence (int)</description>
+    ///   </item>
+    /// </list>
+    /// </remarks>
+    /// <author>
+    /// Adam
+    /// </author>
     public class Skill
     {
         private string name { get; set; }
