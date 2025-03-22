@@ -4,7 +4,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PokemonTeam.Models
 {
-     public class ArenaContext : DbContext
+    /// <summary>
+    /// This class represents the Entity Framework database context for the ASP PokemonTeam project.
+    /// </summary>
+    /// <remarks>
+    /// It defines the mapping between C# models and SQL Server tables,
+    /// enabling LINQ queries, database migrations, and relational data access.
+    /// 
+    /// Tables managed:
+    /// <list type="bullet">
+    ///   <item><description><see cref="UserAuths"/>: Stores login credentials and creation timestamps.</description></item>
+    ///   <item><description><see cref="Players"/>: Represents a player account linked to user authentication.</description></item>
+    ///   <item><description><see cref="Pokemons"/>: Represents all Pokémon with stats and evolution logic.</description></item>
+    ///   <item><description><see cref="Types"/>: Manages type effectiveness multipliers for all elements.</description></item>
+    ///   <item><description><see cref="Skills"/>: Contains the attacks and their effects by type.</description></item>
+    ///   <item><description><see cref="Objects"/>: Game items like potions, buffs, etc.</description></item>
+    ///   <item><description><see cref="Logs"/>: Historical logs of actions or combat events.</description></item>
+    ///   <item><description><see cref="PlayerPokemons"/>: Many-to-many linking between players and their pokémons.</description></item>
+    ///   <item><description><see cref="PokemonSkills"/>: Skills learned by each Pokémon.</description></item>
+    ///   <item><description><see cref="PokemonTypes"/>: Types assigned to each Pokémon.</description></item>
+    ///   <item><description><see cref="PlayerObjects"/>: Items possessed by players.</description></item>
+    /// </list>
+    /// </remarks>
+    /// <author>
+    /// Elerig
+    /// </author>
+    public class ArenaContext : DbContext
     {
         public ArenaContext(DbContextOptions<ArenaContext> options) : base(options) { }
 
