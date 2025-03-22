@@ -29,11 +29,11 @@
 
     public class Skill
     {
-        private string name { get; set; }
-        private string type { get; set; }
-        private int damage { get; set; }
-        private int powerPoints { get; set; }
-        private int accuracy { get; set; }
+        public string name { get; private set; }
+        public string type { get; private set; }
+        public int damage { get; private set; }
+        public int powerPoints { get; set; }
+        public int accuracy { get; private set; }
 
         public Skill(string name, string type, int damage, int powerPoints, int accuracy)
         {
