@@ -126,7 +126,3 @@ Ce projet est sous licence **MIT**. Vous êtes libre de l'utiliser et de le modi
 
 ---
 
-📝 **N'oubliez pas d'ajouter un badge GitHub Actions si vous intégrez une CI/CD !** 🚀
-```
-
-📌 Ce fichier est formaté pour être affiché proprement sur GitHub avec des **sections claires**, des **emojis**, et une **mise en page soignée**. Ajoutez-le en tant que `README.md` dans votre dépôt GitHub ! 🚀
