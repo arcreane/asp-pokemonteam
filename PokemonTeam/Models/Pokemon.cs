@@ -1,6 +1,4 @@
-﻿using PokemonTeam.Exceptions;
-
-namespace PokemonTeam.Models;
+﻿namespace PokemonTeam.Models;
 
 /// <summary>
 /// This class represents a Pokemon.
@@ -43,25 +41,24 @@ namespace PokemonTeam.Models;
 ///   </item>
 /// </list>
 /// </remarks>
-/// <author>
-/// Mohamed
-/// </author>
+/// <author>Mohamed</author>
+/// <seealso cref="Skill"/>
 public class Pokemon
 {
-    private string name { get; set; }
-    private List<TypeChart> types { get; set; }
-    private int healthPoint { get; set; }
-    private int maxHealthPoint { get; set; }
-    private int accuracy { get; set; }
-    private int defense { get; set; }
-    private int strength { get; set; }
-    private int speed { get; set; }
-    private int unlockedXp { get; set; }
-    private List<Skill> skills { get; set; }
-    private Pokemon evolveTo { get; set; }
+    public string name { get; private set; }
+    public List<String> types { get; private set; }
+    public int healthPoint { get; set; }
+    public int maxHealthPoint { get; private set; }
+    public int accuracy { get; private set; }
+    public int defense { get; private set; }
+    public int strength { get; private set; }
+    public int speed { get; private set; }
+    public int unlockedXp { get; set; }
+    public List<Skill> skills { get; set; }
+    public Pokemon evolveTo { get; set; }
     
     public Pokemon(string name, 
-        List<TypeChart> types, 
+        List<String> types, 
         int healthPoint, 
         int maxHealthPoint, 
         int accuracy, 
@@ -83,40 +80,5 @@ public class Pokemon
         this.unlockedXp = unlockedXp;
         this.skills = skills;
         this.evolveTo = evolveTo;
-    }
-    
-    /// <summary>
-    /// Uses a skill on a target Pokémon.
-    /// - Checks if the attacker has enough Power Points (PP).
-    /// - Applies the type multiplier based on the target's Pokémon type(s).
-    /// - Calculates damage considering the attacker's strength and the target's defense.
-    /// - Ensures a minimum of 1 damage is dealt.
-    /// - Reduces the target's health points accordingly.
-    /// - Displays a message indicating the skill used and the damage dealt.
-    /// - Throws an exception if there are not enough PP to use the skill.
-    /// </summary>
-    /// <param name="skill">The skill being used.</param>
-    /// <param name="target">The Pokémon receiving the attack.</param>
-    /// <exception cref="NotEnoughPowerPointsException">Thrown when there are no PP left for the skill.</exception>
-    useSkill(Skill skill, Pokemon target)
-    {
-        if(skill.powerPoints > 0)
-        {
-            TypeChart typeChart = new TypeChart(Skill.type);
-
-            skill.powerPoints--;
-
-            double typeMultiplier = typeChart.multiplier(target.types);
-            
-            double damage = (skill.damage * (strength / target.defense)) * typeMultiplier;
-            
-            target.healthPoint -= (int)Math.Max(1, damage);
-            
-            Console.WriteLine($"{name} used {skill.name} on {target.name}: -{(int)Math.Max(1, damage)} HP!");
-        }
-        else
-        {
-            throw new NotEnoughPowerPointsException("Not enough power points to use this skill.");
-        }
     }
 }
