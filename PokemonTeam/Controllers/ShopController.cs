@@ -1,4 +1,6 @@
-﻿namespace PokemonTeam.Controllers
+﻿#if false
+
+namespace PokemonTeam.Controllers
 {
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
@@ -71,3 +73,4 @@
     }
 
 }
+#endif

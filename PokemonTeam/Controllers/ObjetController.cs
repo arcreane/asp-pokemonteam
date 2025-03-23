@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿#if false
+using Microsoft.AspNetCore.Mvc;
 
 using PokemonTeam.Models;
 
@@ -132,3 +133,4 @@ public class ObjetController : ControllerBase
         return NoContent();
     }
 }
+#endif

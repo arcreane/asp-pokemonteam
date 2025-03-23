@@ -1,4 +1,5 @@
-﻿namespace PokemonTeam.Models
+﻿#if false
+namespace PokemonTeam.Models
 {
     /// <summary>
     /// This class represents a Shop in the game.
@@ -25,3 +26,4 @@
     }
 
 }
+#endif
