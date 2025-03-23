@@ -9,18 +9,19 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: ⚙️ Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.x'
 
-      - name: Restore dependencies
+      - name: 📦 Restore dependencies
         run: dotnet restore
 
-      - name: Build
+      - name: 🛠️ Build all projects (Release)
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+      - name: 🧪 Run tests (Release)
+        run: dotnet test PokemonTeam.Tests/PokemonTeam.Tests.csproj --no-build --configuration Release --verbosity normal
