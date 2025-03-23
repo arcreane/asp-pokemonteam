@@ -6,6 +6,7 @@ on:
 
 jobs:
   build-and-test:
+    name: CI Build & Test
     runs-on: windows-latest
 
     steps:
