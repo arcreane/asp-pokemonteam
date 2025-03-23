@@ -37,7 +37,7 @@ Ce document explique comment contribuer au projet de manière sécurisée, effic
 2. **Développer avec des commits clairs** :
 
 ```bash
-  git commit -m "[Feature] Implémentation du système de shop"
+  git commit -m "feature: Implémentation du système de shop"
 ```
 
 3. **Pousser la branche et créer une pull request vers `dev`.**
@@ -47,6 +47,12 @@ Ce document explique comment contribuer au projet de manière sécurisée, effic
    * 🧪 Exécution des tests unitaires
 
 5. ✅ Si la PR passe, elle est reviewée puis mergée manuellement.
+
+6. 🧹 Après merge, supprimer la branche temporaire :
+```bash
+   git branch -d feature/ma-fonction
+   git push origin --delete feature/ma-fonction
+```
 
 ---
 
