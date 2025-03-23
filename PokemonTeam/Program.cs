@@ -15,9 +15,10 @@ builder.Services.AddControllersWithViews();
 // Add secrets to the configuration.
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
-    .AddUserSecrets<Program>(); // 👈 pour charger secrets.json
+    .AddUserSecrets<Program>();
 
 builder.Services.AddDbContext<PokemonDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

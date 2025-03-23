@@ -88,7 +88,7 @@ public class AuthController : Controller
         Response.Cookies.Append("access_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true, // Puts to false if not using HTTPS
+            Secure = false, // Puts to false if not using HTTPS
             SameSite = SameSiteMode.Strict,
             Expires = DateTimeOffset.UtcNow.AddMinutes(60)
         });
