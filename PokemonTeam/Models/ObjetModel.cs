@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#if false
+using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
 namespace PokemonTeam.Models
@@ -41,3 +42,4 @@ namespace PokemonTeam.Models
     }
 
 }
+#endif

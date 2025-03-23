@@ -1,4 +1,6 @@
-﻿using System.Numerics;
+﻿#if false
+using System.Numerics;
+
 using Microsoft.EntityFrameworkCore;
 
 
@@ -63,3 +65,4 @@ namespace PokemonTeam.Models
     }
 
 }
+#endif

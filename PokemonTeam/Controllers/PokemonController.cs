@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿#if false
+
+using Microsoft.AspNetCore.Mvc;
 using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
 
@@ -62,3 +64,5 @@ public class PokemonController : ControllerBase
         }
     }
 }
+
+#endif
