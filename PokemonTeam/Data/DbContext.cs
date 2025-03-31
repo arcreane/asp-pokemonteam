@@ -22,10 +22,12 @@ public class PokemonDbContext : DbContext
 
     public DbSet<UserAuthModel> UserAuths { get; set; }
     // put here the next tables
+    public DbSet<Skill> Skills {  get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserAuthModel>().ToTable("user_auth");
+        modelBuilder.Entity<Skill>().ToTable("skill");
         // put here the next tables 
     }
 }
