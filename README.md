@@ -1,5 +1,8 @@
+
+## Review Assignment
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/0E1ES0GJ)
 
+[![CI Build & Test](https://github.com/arcreane/asp-pokemonteam/actions/workflows/dotnet-build-and-test.yml/badge.svg)](https://github.com/arcreane/asp-pokemonteam/actions/workflows/dotnet-build-and-test.yml)
 
 # 🎮 Arène des Légendes - ASP.NET MVC
 
