@@ -65,7 +65,7 @@ namespace PokemonTeam.Controllers
         /// <response code="200">Retourne la compétence.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpGet("{id}")]
-        public async Task<ActionResult<Skill>> GetSkill(int id)
+        public async Task<ActionResult<Skill>> getSkill(int id)
         {
             var skill = await _context.Skills.FindAsync(id);
             if (skill == null)
@@ -83,12 +83,12 @@ namespace PokemonTeam.Controllers
         /// <response code="201">Retourne la compétence créée.</response>
         /// <response code="400">Si la requête est invalide.</response>
         [HttpPost]
-        public async Task<ActionResult<Skill>> CreateSkill([FromBody] Skill skill)
+        public async Task<ActionResult<Skill>> createSkill([FromBody] Skill skill)
         {
             _context.Skills.Add(skill);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSkill), new { id = skill.Id }, skill);
+            return CreatedAtAction(nameof(getSkill), new { id = skill.Id }, skill);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace PokemonTeam.Controllers
         /// <response code="400">Si l'ID de la requête ne correspond pas à celui de la compétence.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSkill(int id, [FromBody] Skill skill)
+        public async Task<IActionResult> updateSkill(int id, [FromBody] Skill skill)
         {
             if (id != skill.Id)
             {
@@ -136,7 +136,7 @@ namespace PokemonTeam.Controllers
         /// <response code="204">Suppression réussie.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSkill(int id)
+        public async Task<IActionResult> deleteSkill(int id)
         {
             var skill = await _context.Skills.FindAsync(id);
             if (skill == null)
