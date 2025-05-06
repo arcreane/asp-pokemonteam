@@ -19,7 +19,7 @@ namespace PokemonTeam.Models
     ///     <description><see cref="Name"/>: The name of the skill (string).</description>
     ///   </item>
     ///   <item>
-    ///     <description><see cref="TypeId"/>: The identifier of the skill type (int).</description>
+    ///     <description><see cref="Type"/>: The type of the skill (string).</description>
     ///   </item>
     ///   <item>
     ///     <description><see cref="Damage"/>: The damage inflicted (int).</description>
@@ -46,7 +46,8 @@ namespace PokemonTeam.Models
         public string Name { get; private set; } = string.Empty;
 
         [Required]
-        public int TypeId { get; private set; }
+        [MaxLength(20)]
+        public string Type { get; private set; } = string.Empty;
 
         [Required]
         public int Damage { get; private set; }
@@ -61,10 +62,10 @@ namespace PokemonTeam.Models
         // Constructeur sans paramètres pour EF
         protected Skill() { }
 
-        public Skill(string name, int typeId, int damage, int powerPoints, int accuracy)
+        public Skill(string name, string type, int damage, int powerPoints, int accuracy)
         {
             Name = name;
-            TypeId = typeId;
+            Type = type;
             Damage = damage;
             PowerPoints = powerPoints;
             Accuracy = accuracy;
@@ -170,6 +171,9 @@ namespace PokemonTeam.Models
         /// <returns>La compétence créée.</returns>
         public static async Task<Skill> CreateAsync(Skill skill, PokemonDbContext context)
         {
+            // Vérification que le type est valide pourrait être ajoutée ici, 
+            // par exemple en vérifiant qu'il est dans une liste de types autorisés
+            
             context.Skills.Add(skill);
             await context.SaveChangesAsync();
             return skill;
@@ -188,6 +192,8 @@ namespace PokemonTeam.Models
             {
                 return false;
             }
+            
+            // Vérification que le type est valide pourrait être ajoutée ici
             
             context.Entry(skill).State = EntityState.Modified;
             
@@ -270,8 +276,8 @@ namespace PokemonTeam.Models
                 return new UseSkillResponse(0, target);
             }
             
-            // Récupérer le type de la compétence et calculer le multiplicateur de type
-            string skillType = GetTypeNameFromId(this.TypeId);
+            // Utiliser directement le type de la compétence (string)
+            string skillType = Type.ToLowerInvariant(); // Normaliser pour correspondre au format attendu
             
             // Calculer le multiplicateur de type basé sur les types de la cible
             decimal typeMultiplier = await typeChartService.Multiplier(skillType, target.types.ToArray());
@@ -288,45 +294,6 @@ namespace PokemonTeam.Models
             
             // Retourner la réponse
             return new UseSkillResponse(damageDealt, target);
-        }
-        
-        /// <summary>
-        /// Obtient le nom du type à partir de son identifiant.
-        /// </summary>
-        /// <param name="typeId">L'identifiant du type.</param>
-        /// <returns>Le nom du type.</returns>
-        private static string GetTypeNameFromId(int typeId)
-        {
-            // Mapping simple des IDs aux noms de type
-            Dictionary<int, string> typeMap = new Dictionary<int, string>
-            {
-                { 1, "fire" },
-                { 2, "water" },
-                { 3, "grass" },
-                { 4, "electric" },
-                { 5, "ice" },
-                { 6, "fighting" },
-                { 7, "poison" },
-                { 8, "ground" },
-                { 9, "flying" },
-                { 10, "psychic" },
-                { 11, "bug" },
-                { 12, "rock" },
-                { 13, "ghost" },
-                { 14, "dragon" },
-                { 15, "dark" },
-                { 16, "steel" },
-                { 17, "fairy" },
-                // Valeur par défaut
-                { 0, "normal" }
-            };
-            
-            if (typeMap.TryGetValue(typeId, out string typeName))
-            {
-                return typeName;
-            }
-            
-            return "normal"; // Type par défaut si l'ID n'est pas trouvé
         }
         
         #endregion
