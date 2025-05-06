@@ -1,45 +1,37 @@
-﻿#if false
-using System.ComponentModel.DataAnnotations;
+﻿/// <summary>
+/// This class represents an in‑game object that can be bought and owned by players.
+/// </summary>
+/// <remarks>
+/// Attributes :
+/// <list type="bullet">
+///   <item><description><see cref="Id"/> : Unique identifier</description></item>
+///   <item><description><see cref="Name"/> : Unique name (≤ 50 chars)</description></item>
+///   <item><description><see cref="Price"/> : Cost in Pokédollars (≥ 0)</description></item>
+/// </list>
+/// </remarks>
+/// <author>
+/// Elerig
+/// </author>
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace PokemonTeam.Models
 {
-    /// <summary>
-    /// This class represents an in-game object that can be owned by a player.
-    /// </summary>
-    /// <remarks>
-    /// Attributes :
-    /// <list type="bullet">
-    ///   <item>
-    ///     <description><see cref="Id"/> : Identifiant unique de l'objet.</description>
-    ///   </item>
-    ///   <item>
-    ///     <description><see cref="Name"/> : Nom de l'objet (unique).</description>
-    ///   </item>
-    ///   <item>
-    ///     <description><see cref="Price"/> : Prix de l'objet en Pokédollars (>= 0).</description>
-    ///   </item>
-    /// </list>
-    /// </remarks>
-    /// <author>
-    /// Elerig
-    /// </author>
-
+    [Index(nameof(Name), IsUnique = true)]
     public class Objet
     {
         [Key]
-        public int Id { get; set; }
+        public int ObjetId { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string Name { get; set; }
+        [Required, MaxLength(100)]
+        public string Name { get; set; } = default!;
 
-        [Required]
+        [MaxLength(255)]
+        public string? Description { get; set; }
+
         [Range(0, int.MaxValue)]
         public int Price { get; set; }
-
-        public ICollection<PlayerObject> PlayerObjects { get; set; }
     }
-
 }
-#endif
