@@ -1,5 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using PokemonTeam.Data;
+using PokemonTeam.Exceptions;
 
 namespace PokemonTeam.Models
 {
@@ -66,5 +69,266 @@ namespace PokemonTeam.Models
             PowerPoints = powerPoints;
             Accuracy = accuracy;
         }
+        
+        /// <summary>
+        /// Utilise la compétence et réduit ses points de pouvoir.
+        /// </summary>
+        /// <exception cref="NotEnoughPowerPointsException">Lancée si la compétence n'a plus de PP.</exception>
+        /// <returns>Vrai si la compétence a été utilisée avec succès.</returns>
+        public bool Use()
+        {
+            if (PowerPoints <= 0)
+            {
+                throw new NotEnoughPowerPointsException($"La compétence {Name} n'a plus de points de pouvoir.");
+            }
+            
+            PowerPoints--;
+            return true;
+        }
+        
+        /// <summary>
+        /// Calcule les dégâts infligés par cette compétence.
+        /// </summary>
+        /// <param name="attackerStrength">Force de l'attaquant.</param>
+        /// <param name="targetDefense">Défense de la cible.</param>
+        /// <param name="typeMultiplier">Multiplicateur de type.</param>
+        /// <returns>Dégâts calculés.</returns>
+        public int CalculateDamage(int attackerStrength, int targetDefense, decimal typeMultiplier)
+        {
+            // Formule de calcul des dégâts : (dégâts de base * (force de l'attaquant / défense de la cible)) * multiplicateur de type
+            double damage = (Damage * (attackerStrength / (double)targetDefense)) * (double)typeMultiplier;
+            
+            // Les dégâts minimum sont de 1
+            return Math.Max(1, (int)damage);
+        }
+        
+        /// <summary>
+        /// Détermine si l'attaque touche sa cible en fonction de la précision.
+        /// </summary>
+        /// <returns>Vrai si l'attaque touche.</returns>
+        public bool HitsTarget()
+        {
+            if (Accuracy >= 100)
+                return true;
+                
+            Random random = new Random();
+            int roll = random.Next(1, 101); // Génère un nombre entre 1 et 100
+            
+            return roll <= Accuracy;
+        }
+        
+        /// <summary>
+        /// Restaure les points de pouvoir de la compétence.
+        /// </summary>
+        /// <param name="amount">Quantité de PP à restaurer. Si null, restaure au maximum.</param>
+        /// <returns>Nombre de PP après restauration.</returns>
+        public int RestorePowerPoints(int? amount = null)
+        {
+            // Si amount est null, on restaure au maximum (valeur par défaut pour un Éther max)
+            int maxPP = 10; // Valeur par défaut pour un PP Max
+            
+            if (amount.HasValue)
+            {
+                PowerPoints = Math.Min(maxPP, PowerPoints + amount.Value);
+            }
+            else
+            {
+                PowerPoints = maxPP;
+            }
+            
+            return PowerPoints;
+        }
+        
+        #region Méthodes statiques d'accès aux données
+        
+        /// <summary>
+        /// Récupère toutes les compétences de la base de données.
+        /// </summary>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>Liste de toutes les compétences.</returns>
+        public static async Task<IEnumerable<Skill>> GetAllAsync(PokemonDbContext context)
+        {
+            return await context.Skills.ToListAsync();
+        }
+        
+        /// <summary>
+        /// Récupère une compétence par son identifiant.
+        /// </summary>
+        /// <param name="id">Identifiant de la compétence.</param>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>La compétence si trouvée, sinon null.</returns>
+        public static async Task<Skill> GetByIdAsync(int id, PokemonDbContext context)
+        {
+            return await context.Skills.FindAsync(id);
+        }
+        
+        /// <summary>
+        /// Crée une nouvelle compétence dans la base de données.
+        /// </summary>
+        /// <param name="skill">La compétence à créer.</param>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>La compétence créée.</returns>
+        public static async Task<Skill> CreateAsync(Skill skill, PokemonDbContext context)
+        {
+            context.Skills.Add(skill);
+            await context.SaveChangesAsync();
+            return skill;
+        }
+        
+        /// <summary>
+        /// Met à jour une compétence existante.
+        /// </summary>
+        /// <param name="id">Identifiant de la compétence.</param>
+        /// <param name="skill">Nouvelles données de la compétence.</param>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>True si la mise à jour a réussi, false sinon.</returns>
+        public static async Task<bool> UpdateAsync(int id, Skill skill, PokemonDbContext context)
+        {
+            if (id != skill.Id)
+            {
+                return false;
+            }
+            
+            context.Entry(skill).State = EntityState.Modified;
+            
+            try
+            {
+                await context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ExistsAsync(id, context))
+                {
+                    return false;
+                }
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Supprime une compétence de la base de données.
+        /// </summary>
+        /// <param name="id">Identifiant de la compétence à supprimer.</param>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>True si la suppression a réussi, false sinon.</returns>
+        public static async Task<bool> DeleteAsync(int id, PokemonDbContext context)
+        {
+            var skill = await context.Skills.FindAsync(id);
+            if (skill == null)
+            {
+                return false;
+            }
+            
+            context.Skills.Remove(skill);
+            await context.SaveChangesAsync();
+            return true;
+        }
+        
+        /// <summary>
+        /// Vérifie si une compétence existe dans la base de données.
+        /// </summary>
+        /// <param name="id">Identifiant de la compétence.</param>
+        /// <param name="context">Contexte de base de données.</param>
+        /// <returns>True si la compétence existe, false sinon.</returns>
+        public static async Task<bool> ExistsAsync(int id, PokemonDbContext context)
+        {
+            return await context.Skills.AnyAsync(s => s.Id == id);
+        }
+        
+        #endregion
+        
+        #region Méthodes de combat
+        
+        /// <summary>
+        /// Utilise la compétence en combat entre deux Pokémon.
+        /// </summary>
+        /// <param name="attacker">Le Pokémon attaquant.</param>
+        /// <param name="target">Le Pokémon cible.</param>
+        /// <param name="typeChartService">Service pour obtenir les multiplicateurs de type.</param>
+        /// <returns>Le résultat de l'utilisation de la compétence.</returns>
+        /// <exception cref="NotEnoughPowerPointsException">Si la compétence n'a plus de PP.</exception>
+        /// <exception cref="ArgumentNullException">Si un des paramètres est nul.</exception>
+        public async Task<UseSkillResponse> UseInBattle(Pokemon attacker, Pokemon target, PokemonTeam.Services.ITypeChartService typeChartService)
+        {
+            if (attacker == null)
+                throw new ArgumentNullException(nameof(attacker), "L'attaquant ne peut pas être nul.");
+                
+            if (target == null)
+                throw new ArgumentNullException(nameof(target), "La cible ne peut pas être nulle.");
+                
+            if (typeChartService == null)
+                throw new ArgumentNullException(nameof(typeChartService), "Le service de type ne peut pas être nul.");
+            
+            // Utilisation de la compétence (réduit les PP)
+            this.Use();
+            
+            // Déterminer si l'attaque touche sa cible
+            if (!this.HitsTarget())
+            {
+                // L'attaque a manqué sa cible
+                return new UseSkillResponse(0, target);
+            }
+            
+            // Récupérer le type de la compétence et calculer le multiplicateur de type
+            string skillType = GetTypeNameFromId(this.TypeId);
+            
+            // Calculer le multiplicateur de type basé sur les types de la cible
+            decimal typeMultiplier = await typeChartService.Multiplier(skillType, target.types.ToArray());
+            
+            // Calculer les dégâts
+            int damageDealt = this.CalculateDamage(
+                attacker.strength,
+                target.defense,
+                typeMultiplier
+            );
+            
+            // Appliquer les dégâts à la cible
+            target.healthPoint = Math.Max(0, target.healthPoint - damageDealt);
+            
+            // Retourner la réponse
+            return new UseSkillResponse(damageDealt, target);
+        }
+        
+        /// <summary>
+        /// Obtient le nom du type à partir de son identifiant.
+        /// </summary>
+        /// <param name="typeId">L'identifiant du type.</param>
+        /// <returns>Le nom du type.</returns>
+        private static string GetTypeNameFromId(int typeId)
+        {
+            // Mapping simple des IDs aux noms de type
+            Dictionary<int, string> typeMap = new Dictionary<int, string>
+            {
+                { 1, "fire" },
+                { 2, "water" },
+                { 3, "grass" },
+                { 4, "electric" },
+                { 5, "ice" },
+                { 6, "fighting" },
+                { 7, "poison" },
+                { 8, "ground" },
+                { 9, "flying" },
+                { 10, "psychic" },
+                { 11, "bug" },
+                { 12, "rock" },
+                { 13, "ghost" },
+                { 14, "dragon" },
+                { 15, "dark" },
+                { 16, "steel" },
+                { 17, "fairy" },
+                // Valeur par défaut
+                { 0, "normal" }
+            };
+            
+            if (typeMap.TryGetValue(typeId, out string typeName))
+            {
+                return typeName;
+            }
+            
+            return "normal"; // Type par défaut si l'ID n'est pas trouvé
+        }
+        
+        #endregion
     }
 }

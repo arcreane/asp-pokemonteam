@@ -55,7 +55,9 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Services d'application
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITypeChartService, TypeChartService>();
 
 builder.Services.AddScoped<IPasswordHasher<UserAuthModel>, PasswordHasher<UserAuthModel>>();
 
