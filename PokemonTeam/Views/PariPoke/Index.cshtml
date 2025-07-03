@@ -1,0 +1,56 @@
+<h2>Course Pokémon - Parie ton Pokédollar</h2>
+
+<label for="pokemon">Choisis ton Pokémon :</label>
+<select id="pokemon">
+  <option value="Pikachu">Pikachu</option>
+  <option value="Bulbasaur">Bulbasaur</option>
+  <option value="Charmander">Charmander</option>
+  <option value="Squirtle">Squirtle</option>
+</select>
+
+<br />
+
+<label for="mise">Montant du pari :</label>
+<input id="mise" type="number" value="10" min="1" />
+
+<br />
+
+<button id="startRace">Démarrer la course</button>
+
+<div id="result"></div>
+
+<script>
+  document.getElementById('startRace').addEventListener('click', async () => {
+    const selectedPokemon = document.getElementById('pokemon').value;
+    const mise = parseInt(document.getElementById('mise').value);
+
+    // Tirage au hasard du vainqueur
+    const pokemons = ["Pikachu", "Bulbasaur", "Charmander", "Squirtle"];
+    const winner = pokemons[Math.floor(Math.random() * pokemons.length)];
+
+    let gain = 0;
+    let message = "";
+
+    if (selectedPokemon === winner) {
+      gain = mise; // Gagne la mise en plus = x2
+      message = `Bravo ! ${winner} a gagné ! Tu gagnes ${gain} pokédollars.`;
+    } else {
+      gain = -mise; // Perte
+      message = `Perdu ! ${winner} a gagné ! Tu perds ${mise} pokédollars.`;
+    }
+
+    // MAJ backend
+    await fetch('/api/player/update', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        game: "PokemonRace",
+        experience: 0,
+        pokedollar: gain
+      })
+    });
+
+    document.getElementById('result').innerText = message;
+  });
+</script>
