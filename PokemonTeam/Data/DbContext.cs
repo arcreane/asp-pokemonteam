@@ -25,11 +25,19 @@ public class PokemonDbContext : DbContext
     public DbSet<Skill> Skills {  get; set; }
     
     public DbSet<TypeChart> TypeChart { get; set; }
+    public DbSet<Player> Players { get; set; }
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserAuthModel>().ToTable("user_auth");
         modelBuilder.Entity<Skill>().ToTable("skill");
+        
+        modelBuilder.Entity<Player>().ToTable("player");
+        modelBuilder.Entity<Player>()
+            .HasOne(p => p.UserAuth)
+            .WithMany()
+            .HasForeignKey(p => p.fk_user_auth);
         // put here the next tables 
         modelBuilder.Entity<TypeChart>().ToTable("type");
     }
