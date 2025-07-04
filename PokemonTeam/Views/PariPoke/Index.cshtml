@@ -1,3 +1,8 @@
+@{
+  ViewData["Title"] = "PariPoke";
+  Layout = "_Layout";
+}
+
 <h2>Course Pokémon - Parie ton Pokédollar</h2>
 
 <label for="pokemon">Choisis ton Pokémon :</label>
@@ -18,6 +23,46 @@
 <button id="startRace">Démarrer la course</button>
 
 <div id="result"></div>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const game = urlParams.get('game');
+
+  if (game) {
+    // Récupère l'utilisateur connecté
+    fetch('/auth/check', { credentials: 'include' })
+      .then(res => res.ok ? res.json() : Promise.reject('Not logged'))
+      .then(async data => {
+        const email = data.email;
+
+        // Vérifie si le Player existe pour ce jeu
+        const resPlayer = await fetch(`/api/player/me?game=${game}`, { credentials: 'include' });
+
+        if (resPlayer.ok) {
+          const player = await resPlayer.json();
+          document.getElementById('player-info').innerText = `👋 ${player.name}`;
+        } else {
+          // Crée le Player automatiquement
+          const prefix = email.split('@@')[0];
+          const playerName = `${prefix}-${game}`;
+
+          const createRes = await fetch('/api/player/create', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: playerName, game: game })
+          });
+
+          if (createRes.ok) {
+            const newPlayer = await createRes.json();
+            document.getElementById('player-info').innerText = `👋 ${newPlayer.name}`;
+          } else {
+            console.error("Erreur création profil joueur");
+          }
+        }
+      })
+      .catch(err => console.log('Utilisateur non connecté'));
+  }
+</script>
 
 <script>
   document.getElementById('startRace').addEventListener('click', async () => {
@@ -35,8 +80,8 @@
       gain = mise; // Gagne la mise en plus = x2
       message = `Bravo ! ${winner} a gagné ! Tu gagnes ${gain} pokédollars.`;
     } else {
-      gain = -mise; // Perte
-      message = `Perdu ! ${winner} a gagné ! Tu perds ${mise} pokédollars.`;
+      gain = 0; // Perte
+      message = `Perdu ! ${winner} a gagné ! Tu perds 0 pokédollars.`;
     }
 
     // MAJ backend
@@ -45,7 +90,7 @@
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        game: "PokemonRace",
+        game: "PariPoke",
         experience: 0,
         pokedollar: gain
       })
@@ -54,3 +99,6 @@
     document.getElementById('result').innerText = message;
   });
 </script>
+
+
+
