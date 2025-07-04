@@ -1,6 +1,6 @@
 @{
-  ViewData["Title"] = "PariPoke";
-  Layout = "_Layout";
+ViewData["Title"] = "PariPoke";
+Layout = "_Layout";
 }
 
 <h2>Course Pokémon - Parie ton Pokédollar</h2>
@@ -22,83 +22,230 @@
 
 <button id="startRace">Démarrer la course</button>
 
-<div id="result"></div>
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const game = urlParams.get('game');
+<!-- Piste SVG -->
+<div id="raceContainer">
+  <svg id="raceSvg" width="1200" height="800" style="display:block; margin: 0 auto;">
+    <!-- Couloirs colorés -->
+    <ellipse cx="600" cy="400" rx="500" ry="300" fill="#f5c47c" opacity="0.1"/>
+    <ellipse cx="600" cy="400" rx="420" ry="250" fill="#f5a05c" opacity="0.1"/>
+    <ellipse cx="600" cy="400" rx="340" ry="200" fill="#f5834c" opacity="0.1"/>
+    <ellipse cx="600" cy="400" rx="260" ry="150" fill="#f55c2c" opacity="0.1"/>
+    <ellipse cx="600" cy="400" rx="180" ry="100" fill="white"/>
 
-  if (game) {
-    // Récupère l'utilisateur connecté
-    fetch('/auth/check', { credentials: 'include' })
-      .then(res => res.ok ? res.json() : Promise.reject('Not logged'))
-      .then(async data => {
-        const email = data.email;
+    <!-- Séparations -->
+    <ellipse cx="600" cy="400" rx="500" ry="300" stroke="#666" fill="none" stroke-width="4"/>
+    <ellipse cx="600" cy="400" rx="420" ry="250" stroke="#aaa" fill="none" stroke-width="2"/>
+    <ellipse cx="600" cy="400" rx="340" ry="200" stroke="#aaa" fill="none" stroke-width="2"/>
+    <ellipse cx="600" cy="400" rx="260" ry="150" stroke="#aaa" fill="none" stroke-width="2"/>
+    <ellipse cx="600" cy="400" rx="180" ry="100" stroke="#aaa" fill="none" stroke-width="2"/>
+  </svg>
+</div>
 
-        // Vérifie si le Player existe pour ce jeu
-        const resPlayer = await fetch(`/api/player/me?game=${game}`, { credentials: 'include' });
+<!-- Barres de progression -->
+<div id="progressBars" style="width: 80%; margin: 20px auto;"></div>
 
-        if (resPlayer.ok) {
-          const player = await resPlayer.json();
-          document.getElementById('player-info').innerText = `👋 ${player.name}`;
-        } else {
-          // Crée le Player automatiquement
-          const prefix = email.split('@@')[0];
-          const playerName = `${prefix}-${game}`;
+<!-- Popup Victoire -->
+<div id="victoryPopup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); text-align:center; z-index:1000;">
+  <div style="background:white; padding:40px; display:inline-block; margin-top:10%; border-radius:8px;">
+    <h1 id="victoryTitle">Victoire !</h1>
+    <img id="victorySprite" src="" alt="Gagnant" style="width:150px; height:150px;"/>
+    <p id="victoryMessage"></p>
+    <button onclick="document.getElementById('victoryPopup').style.display='none'" style="padding:10px 20px;">Fermer</button>
+  </div>
+</div>
 
-          const createRes = await fetch('/api/player/create', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: playerName, game: game })
-          });
+<div id="result" style="text-align: center; margin-top: 20px;"></div>
 
-          if (createRes.ok) {
-            const newPlayer = await createRes.json();
-            document.getElementById('player-info').innerText = `👋 ${newPlayer.name}`;
-          } else {
-            console.error("Erreur création profil joueur");
-          }
-        }
-      })
-      .catch(err => console.log('Utilisateur non connecté'));
+<style>
+  #raceContainer {
+    position: relative;
+    width: 1200px;
+    height: 800px;
+    margin: 30px auto;
   }
-</script>
+
+  .runner {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+  }
+
+  .progress-item {
+    margin: 5px 0;
+  }
+
+  .progress-label {
+    display: inline-block;
+    width: 100px;
+  }
+
+  .progress-bar {
+    display: inline-block;
+    height: 20px;
+    background: #ddd;
+    border: 1px solid #999;
+    width: 60%;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: green;
+    width: 0%;
+  }
+</style>
 
 <script>
   document.getElementById('startRace').addEventListener('click', async () => {
     const selectedPokemon = document.getElementById('pokemon').value;
     const mise = parseInt(document.getElementById('mise').value);
 
-    // Tirage au hasard du vainqueur
-    const pokemons = ["Pikachu", "Bulbasaur", "Charmander", "Squirtle"];
-    const winner = pokemons[Math.floor(Math.random() * pokemons.length)];
+    const pokemons = ["pikachu", "bulbasaur", "charmander", "squirtle"];
+    const runners = [];
 
-    let gain = 0;
-    let message = "";
+    const svg = document.getElementById('raceSvg');
+    svg.querySelectorAll('.start-line').forEach(l => l.remove());
 
-    if (selectedPokemon === winner) {
-      gain = mise; // Gagne la mise en plus = x2
-      message = `Bravo ! ${winner} a gagné ! Tu gagnes ${gain} pokédollars.`;
-    } else {
-      gain = 0; // Perte
-      message = `Perdu ! ${winner} a gagné ! Tu perds 0 pokédollars.`;
+    const track = document.getElementById('raceContainer');
+    track.querySelectorAll('.runner').forEach(r => r.remove());
+
+    for (let i = 0; i < pokemons.length; i++) {
+      const pokeName = pokemons[i];
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeName}`);
+      const data = await res.json();
+
+      const spriteUrl = data.sprites.back_default;
+      const spriteFront = data.sprites.front_default;
+
+      const img = document.createElement('img');
+      img.src = spriteUrl;
+      img.className = 'runner';
+      track.appendChild(img);
+
+      runners.push({
+        img: img,
+        front: spriteFront,
+        name: pokeName
+      });
     }
 
-    // MAJ backend
-    await fetch('/api/player/update', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        game: "PariPoke",
-        experience: 0,
-        pokedollar: gain
-      })
+    const totalSteps = 360;
+    const steps = runners.map(() => 0);
+
+    const centerX = 600;
+    const centerY = 400;
+
+    const radiusXArray = [460, 380, 300, 220];
+    const radiusYArray = [280, 230, 180, 130];
+
+    const angleOffsets = [
+      0 * Math.PI / 180,
+      5 * Math.PI / 180,
+      10 * Math.PI / 180,
+      15 * Math.PI / 180
+    ];
+
+    // Lignes de départ précises
+    for (let i = 0; i < pokemons.length; i++) {
+      const a = angleOffsets[i];
+      const x1 = centerX;
+      const y1 = centerY;
+      const x2 = centerX + radiusXArray[i] * Math.cos(a);
+      const y2 = centerY + radiusYArray[i] * Math.sin(a);
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1);
+      line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2);
+      line.setAttribute("y2", y2);
+      line.setAttribute("stroke", "white");
+      line.setAttribute("stroke-width", "2");
+      line.setAttribute("class", "start-line");
+      svg.appendChild(line);
+    }
+
+    const progressBars = [];
+    const progressContainer = document.getElementById('progressBars');
+    progressContainer.innerHTML = '';
+
+    pokemons.forEach(pokeName => {
+      const item = document.createElement('div');
+      item.className = 'progress-item';
+
+      const label = document.createElement('span');
+      label.className = 'progress-label';
+      label.innerText = pokeName;
+
+      const bar = document.createElement('div');
+      bar.className = 'progress-bar';
+
+      const fill = document.createElement('div');
+      fill.className = 'progress-fill';
+
+      bar.appendChild(fill);
+      item.appendChild(label);
+      item.appendChild(bar);
+      progressContainer.appendChild(item);
+
+      progressBars.push(fill);
     });
 
-    document.getElementById('result').innerText = message;
+    let winnerIndex = -1;
+
+    const interval = setInterval(() => {
+      let finished = false;
+
+      for (let i = 0; i < runners.length; i++) {
+        if (steps[i] >= totalSteps) continue;
+
+        steps[i] += Math.random() * 5;
+
+        const angle = angleOffsets[i] + steps[i] * Math.PI / 180;
+        const x = centerX + radiusXArray[i] * Math.cos(angle) - 25;
+        const y = centerY + radiusYArray[i] * Math.sin(angle) - 25;
+
+        runners[i].img.style.left = `${x}px`;
+        runners[i].img.style.top = `${y}px`;
+
+        const percent = Math.min(steps[i] / totalSteps * 100, 100);
+        progressBars[i].style.width = percent + '%';
+
+        if (steps[i] >= totalSteps && winnerIndex === -1) {
+          winnerIndex = i;
+          finished = true;
+        }
+      }
+
+      if (finished) {
+        clearInterval(interval);
+
+        const winnerName = runners[winnerIndex].name;
+        const winnerSprite = runners[winnerIndex].front;
+
+        let gain = 0;
+        if (selectedPokemon.toLowerCase() === winnerName) {
+          gain = mise;
+        }
+
+        fetch('/api/player/update', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game: "PariPoke",
+            experience: 0,
+            pokedollar: gain
+          })
+        });
+
+        document.getElementById('victoryTitle').innerText = `Victoire de ${winnerName}!`;
+        document.getElementById('victorySprite').src = winnerSprite;
+        document.getElementById('victoryMessage').innerText = gain > 0
+          ? `Bravo ! Tu remportes ${gain} pokédollars !`
+          : `Dommage, tu perds ton pari.`;
+
+        document.getElementById('victoryPopup').style.display = 'block';
+      }
+    }, 50);
   });
 </script>
-
-
-
