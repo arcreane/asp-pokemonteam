@@ -54,8 +54,8 @@ public class Pokemon
     public int strength { get; private set; }
     public int speed { get; private set; }
     public int unlockedXp { get; set; }
-    public List<Skill> skills { get; set; }
-    public Pokemon evolveTo { get; set; }
+    public List<Skill>? skills { get; set; }
+    public Pokemon? evolveTo { get; set; }
     
     public Pokemon(string name, 
         List<String> types, 

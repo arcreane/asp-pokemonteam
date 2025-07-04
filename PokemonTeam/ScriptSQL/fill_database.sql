@@ -327,7 +327,7 @@ UPDATE pokemon SET fk_evolution = 148 WHERE id = 147;
 UPDATE pokemon SET fk_evolution = 149 WHERE id = 148;
 
 INSERT INTO type
-(name, fire, water, grass, electric, ice, fighting, poison, ground, flying, psychic, bug, rock, ghost, dragon, dark, steel, fairy)
+(typeName, fire, water, grass, electric, ice, fighting, poison, ground, flying, psychic, bug, rock, ghost, dragon, dark, steel, fairy)
 VALUES
     ('Normal', 1.00, 1.00, 1.00, 1.00, 1.00, 2.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 0.00, 1.00, 1.00, 1.00, 1.00),
     ('Fire', 1.00, 2.00, 0.50, 1.00, 0.50, 1.00, 1.00, 1.00, 1.00, 1.00, 0.50, 0.50, 1.00, 0.50, 1.00, 2.00, 0.50),
