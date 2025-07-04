@@ -41,7 +41,7 @@ ADD CONSTRAINT fk_evolution FOREIGN KEY(fk_evolution) REFERENCES pokemon(id) ON 
 GO
 CREATE TABLE type (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    name VARCHAR(10) NOT NULL UNIQUE,
+    typeName VARCHAR(10) NOT NULL UNIQUE,
     fire DECIMAL(3,2) DEFAULT 1.00,
     water DECIMAL(3,2) DEFAULT 1.00,
     grass DECIMAL(3,2) DEFAULT 1.00,

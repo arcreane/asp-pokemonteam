@@ -82,7 +82,7 @@ public class TypeChart
         /// Calcule le multiplicateur d’une attaque sur un ou plusieurs types défenseurs.
         /// </summary>
         /// <param name="ctx">DbContext pour récupérer les lignes de la table.</param>
-        public static async Task<decimal> GetDamageMultiplierAsync(
+        public static async Task<double> GetDamageMultiplierAsync(
             PokemonDbContext ctx,
             string attackType,
             params string[] defenderTypes)
@@ -96,7 +96,7 @@ public class TypeChart
             if (defenderTypes is null || defenderTypes.Length == 0)
                 throw new ArgumentException("Au moins un type défenseur est requis.", nameof(defenderTypes));
 
-            decimal multiplier = 1m;
+            double multiplier = 1.0;
 
             foreach (var def in defenderTypes)
             {
@@ -107,7 +107,7 @@ public class TypeChart
                 if (row is null)
                     throw new ArgumentException($"Type défenseur inconnu : {def}", nameof(defenderTypes));
 
-                multiplier *= selectColumn(row);
+                multiplier *= (double)selectColumn(row);
             }
 
             return multiplier;
