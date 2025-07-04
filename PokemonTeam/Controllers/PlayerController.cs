@@ -103,4 +103,51 @@ public class PlayerController : Controller
 
         return Ok(new { message = $"Player for game {game} deleted" });
     }
+    
+    [HttpGet("my-items")]
+    [Authorize]
+    public async Task<IActionResult> GetMyItems([FromQuery] string game)
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        var player = await _context.Players
+            .Include(p => p.Items)
+            .Include(p => p.UserAuth)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == game);
+
+        if (player == null) return NotFound();
+
+        return Ok(player.Items);
+    }
+
+    [HttpPost("use-item")]
+    [Authorize]
+    public async Task<IActionResult> UseItem([FromBody] UseItemRequest request)
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        var player = await _context.Players
+            .Include(p => p.Items)
+            .Include(p => p.UserAuth)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+        if (player == null) return NotFound();
+
+        var item = player.Items.FirstOrDefault(i => i.Id == request.ItemId);
+        if (item == null) return BadRequest("Item non possédé.");
+
+        // Retire l'item
+        player.Items.Remove(item);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"Item '{item.Name}' utilisé et retiré de l'inventaire." });
+    }
+
+    public class UseItemRequest
+    {
+        public int ItemId { get; set; }
+        public string Game { get; set; } = string.Empty;
+    }
+
 }

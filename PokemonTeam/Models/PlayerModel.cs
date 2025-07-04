@@ -12,5 +12,6 @@ public class Player
     public UserAuthModel? UserAuth { get; set; }
 
     // public ICollection<Pokemon> Pokemons { get; set; } = new List<Pokemon>();
-    // public ICollection<Object> Objects { get; set; } = new List<Object>();
+    public ICollection<Item> Items { get; set; } = new List<Item>();
+
 }
