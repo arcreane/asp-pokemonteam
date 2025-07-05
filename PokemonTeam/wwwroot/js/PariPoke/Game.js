@@ -63,7 +63,15 @@ document.getElementById('startRace').addEventListener('click', async () => {
         for (let i = 0; i < runners.length; i++) {
             if (steps[i] >= totalLengths[i]) continue;
 
-            steps[i] += 8;
+            // ✅ Vitesse de base
+            let speed = 8;
+
+            // ✅ Appliquer le boost uniquement au Pokémon parié
+            if (runners[i].name.toLowerCase() === selectedPokemon.toLowerCase()) {
+                speed += window.activeBoost || 0;
+            }
+
+            steps[i] += speed;
 
             const point = paths[i].getPointAtLength(steps[i]);
             runners[i].img.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
@@ -111,6 +119,15 @@ document.getElementById('startRace').addEventListener('click', async () => {
                 : `Dommage, tu perds ton pari.`;
 
             document.getElementById('victoryPopup').style.display = 'block';
+
+            // ✅ Reset le boost après la course
+            window.activeBoost = 0;
+
+            // ✅ (Optionnel) cacher une info boost si tu l’affiches
+            const boostInfo = document.getElementById('boost-info');
+            if (boostInfo) {
+                boostInfo.style.display = 'none';
+            }
         }
     }, 50);
 });

@@ -89,7 +89,11 @@ async function useItem(itemId) {
         });
 
         if (res.ok) {
-            alert('✅ Objet utilisé !');
+            const boost = getPotionBoostByItemId(itemId);
+            window.activeBoost = boost;
+
+            alert(`✅ Potion utilisée ! Boost de vitesse : +${boost}`);
+
             await loadInventory();
         } else {
             const msg = await res.text();
@@ -98,6 +102,17 @@ async function useItem(itemId) {
 
     } catch (error) {
         console.error("Erreur useItem:", error);
+    }
+}
+
+function getPotionBoostByItemId(itemId) {
+    // Exemple ➜ adapte ça à tes ID réels !
+    switch (itemId) {
+        case 1: return 2;   // Potion
+        case 2: return 4;   // Super potion
+        case 3: return 6;   // Hyper potion
+        case 4: return 8;   // Max potion
+        default: return 0;
     }
 }
 
