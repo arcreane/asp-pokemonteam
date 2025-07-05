@@ -63,6 +63,25 @@ public class PokemonController : ControllerBase
     }
 
     /// <summary>
+    /// This method retrieves a Pokémon by its ID.
+    /// </summary>
+    /// <param name="id">Pokémon ID</param>
+    /// <returns>Pokémon details</returns>
+    [HttpGet("getPokemonById/{id}")]
+    public async Task<ActionResult<Pokemon>> GetPokemonById(int id)
+    {
+        var pokemon = await _ctx.Pokemons.FindAsync(id);
+
+        if (pokemon == null)
+        {
+            return NotFound(new { error = "Pokémon not found." });
+        }
+
+        return Ok(pokemon);
+    }
+
+    
+    /// <summary>
     /// This method retrieves all Pokémon.
     /// </summary>
     /// <returns>List of Pokémon</returns>
