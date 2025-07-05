@@ -46,6 +46,11 @@ document.getElementById('startRace').addEventListener('click', async () => {
         const img = document.createElement('img');
         img.src = spriteUrl;
         img.className = 'runner';
+        if (pokeName.toLowerCase() === selectedPokemon.toLowerCase()) {
+            if (window.activeBoost && window.activeBoost > 0) {
+                img.classList.add('boosted-runner');
+            }
+        }
         track.appendChild(img);
 
         runners.push({ img: img, front: spriteFront, name: pokeName });
@@ -53,6 +58,8 @@ document.getElementById('startRace').addEventListener('click', async () => {
         const point = paths[i].getPointAtLength(startOffsets[i]);
         img.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
     }
+
+
 
     const steps = [...startOffsets];
     let winnerIndex = -1;
