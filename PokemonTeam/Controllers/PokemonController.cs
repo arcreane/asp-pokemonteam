@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
@@ -18,10 +19,10 @@ namespace PokemonTeam.Controllers;
 [Route("[controller]")]
 public class PokemonController : ControllerBase
 {
-    
-    
     private readonly PokemonDbContext _ctx;
+
     public PokemonController(PokemonDbContext ctx) => _ctx = ctx;
+
     /// <summary>
     /// This method allows a Pokémon to use a skill.
     /// </summary>
@@ -39,17 +40,12 @@ public class PokemonController : ControllerBase
 
             if (skill.PowerPoints > 0)
             {
-                // Reduction of power points
                 skill.PowerPoints--;
 
-                // Calculating the type multiplier
-                double typeMultiplier = await TypeChart.GetDamageMultiplierAsync(_ctx,skill.Type, target.types.ToArray());
-
-                // Calculating the damage
+                double typeMultiplier = await TypeChart.GetDamageMultiplierAsync(_ctx, skill.Type, target.types.ToArray());
                 double damage = (skill.Damage * (attacker.strength / (double)target.defense)) * typeMultiplier;
                 int finalDamage = Math.Max(1, (int)damage);
 
-                // Application of the damage
                 target.healthPoint -= finalDamage;
 
                 var response = new UseSkillResponse(finalDamage, target);
@@ -64,5 +60,16 @@ public class PokemonController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// This method retrieves all Pokémon.
+    /// </summary>
+    /// <returns>List of Pokémon</returns>
+    [HttpGet("getAllPokemon")]
+    public async Task<ActionResult<List<Pokemon>>> GetAllPokemon()
+    {
+        var pokemons = await _ctx.Pokemons.ToListAsync();
+        return Ok(pokemons);
     }
 }
