@@ -2,25 +2,50 @@
 ViewData["Title"] = "PokeGacha";
 }
 
-<h2>Tirer un Pokémon !</h2>
-<button id="draw">Tirer</button>
+<h1>POKEGACHA</h1>
+<h2>Gotta Catch Them All!</h2>
+
+<button id="draw" style="border:none; background:none;">
+    <img src="https://assets-v2.lottiefiles.com/a/d12e3930-1177-11ee-b96d-0be88c37ea6a/NQyTAsXQmZ.gif"
+         alt="Pokeball" width="80" />
+</button>
+
+<img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
+
 <div id="result"></div>
+<div id="history" style="margin-top:20px;"></div>
+
+<audio id="gachaSound" src="https://vgmsite.com/soundtracks/pokemon-red-blue-yellow-gameboy-soundtrack/ljmxehvo/112%20-%20Caught%20Pokemon.mp3"></audio>
 
 @section Scripts {
 <script>
-    document.getElementById("draw").addEventListener("click", () => {
+    const drawButton = document.getElementById("draw");
+    const loading = document.getElementById("loading");
+    const sound = document.getElementById("gachaSound");
+
+    drawButton.addEventListener("click", () => {
         const id = Math.floor(Math.random() * 151) + 1;
+        loading.style.display = "block";
         fetch(`/Pokemon/getPokemonById/${id}`)
             .then(res => res.json())
             .then(pokemon => {
+                sound.play();
+                const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
                 document.getElementById("result").innerHTML = `
+                    <div style="border:1px solid #ccc; padding:1rem; border-radius:8px;">
                         <h3>${pokemon.name}</h3>
+                        <img src="${spriteUrl}" alt="${pokemon.name}" />
                         <p>HP: ${pokemon.healthPoint}</p>
-                        <p>Attaque: ${pokemon.strength}</p>
-                        <p>Défense: ${pokemon.defense}</p>
-                        <p>Vitesse: ${pokemon.speed}</p>
-                    `;
-            });
+                        <p>ATK: ${pokemon.strength}</p>
+                        <p>DEF: ${pokemon.defense}</p>
+                        <p>SPD: ${pokemon.speed}</p>
+                    </div>
+                `;
+                document.getElementById("history").innerHTML += `
+                    <img src="${spriteUrl}" alt="${pokemon.name}" width="40" style="margin:2px;" />
+                `;
+            })
+            .finally(() => loading.style.display = "none");
     });
 </script>
 }
