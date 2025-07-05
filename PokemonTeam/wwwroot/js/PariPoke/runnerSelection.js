@@ -1,8 +1,5 @@
-// runnersSelection.js
-
 console.log("RunnerSelection.js chargé ✔️");
 
-// Ta liste globale de pokémons possibles
 const allPokemons = [
     "pikachu", "bulbasaur", "charmander", "squirtle",
     "eevee", "snorlax", "jigglypuff", "meowth",
@@ -28,6 +25,7 @@ allPokemons.forEach(async pokeName => {
 
     card.addEventListener('click', () => {
         if (card.classList.contains('selected')) {
+            // Retirer sélection
             card.classList.remove('selected');
             const index = selectedRunners.indexOf(pokeName);
             if (index > -1) selectedRunners.splice(index, 1);
@@ -39,16 +37,18 @@ allPokemons.forEach(async pokeName => {
             card.classList.add('selected');
             selectedRunners.push(pokeName);
         }
+
+        // Reconstruire les preview en live avec le module
+        PreviewUtils.buildPreviewRunners(selectedRunners);
     });
 
     runnersContainer.appendChild(card);
 });
 
-// Gestion bouton valider
 document.getElementById("confirmRunners").addEventListener("click", () => {
     if (selectedRunners.length !== 4) {
-        alert("Choisis exactement 4 Pokémon avant de valider !");
+        alert("Choisis exactement 4 Pokémon coureurs !");
         return;
     }
-    console.log("Tes coureurs sont :", selectedRunners);
+    console.log("Coureurs confirmés :", selectedRunners);
 });

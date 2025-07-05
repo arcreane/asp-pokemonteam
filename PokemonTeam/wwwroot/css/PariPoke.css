@@ -170,3 +170,8 @@
 .boosted-runner {
     filter: drop-shadow(0 0 10px gold);
 }
+
+.preview-runner {
+    opacity: 0.7;
+    pointer-events: none;
+}
