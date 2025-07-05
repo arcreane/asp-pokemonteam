@@ -1,19 +1,32 @@
 @{
-ViewData["Title"] = "PokeGacha";
+    ViewData["Title"] = "PokeGacha";
 }
 
-<h1>POKEGACHA</h1>
-<h2>Gotta Catch Them All!</h2>
+<div style="display: flex; height: 100vh;">
+    <!-- Partie gauche : le gacha -->
+    <div style="flex: 2; padding: 1rem; border-right: 2px solid #ddd;">
+        <h1>POKEGACHA</h1>
+        <h2>Gotta Catch Them All!</h2>
+        <button id="draw" style="border:none; background:none;">
+            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif"
+                 alt="Pokeball" width="80" />
+        </button>
+        <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
 
-<button id="draw" style="border:none; background:none;">
-    <img src="https://assets-v2.lottiefiles.com/a/d12e3930-1177-11ee-b96d-0be88c37ea6a/NQyTAsXQmZ.gif"
-         alt="Pokeball" width="80" />
-</button>
-
-<img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
-
-<div id="result"></div>
-<div id="history" style="margin-top:20px;"></div>
+    <!-- Partie droite : historique + zone future -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <!-- Haut : liste des pulls -->
+        <div id="history" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
+            <h3>Historique</h3>
+        </div>
+        <!-- Bas : vide pour futur contenu -->
+        <div id="future" style="flex: 1; padding: 1rem;">
+            <h3>À venir</h3>
+        </div>
+    </div>
+</div>
 
 <audio id="gachaSound" src="https://vgmsite.com/soundtracks/pokemon-red-blue-yellow-gameboy-soundtrack/ljmxehvo/112%20-%20Caught%20Pokemon.mp3"></audio>
 
