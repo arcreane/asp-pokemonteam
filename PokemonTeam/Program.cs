@@ -55,11 +55,22 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Services d'application
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITypeChartService, TypeChartService>();
 
 builder.Services.AddScoped<IPasswordHasher<UserAuthModel>, PasswordHasher<UserAuthModel>>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<PokemonDbContext>();
+    DbInitializer.Initialize(context);
+}
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

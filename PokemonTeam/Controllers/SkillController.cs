@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
+using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
+using PokemonTeam.Services;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PokemonTeam.Controllers
@@ -29,6 +29,9 @@ namespace PokemonTeam.Controllers
     ///   <item>
     ///     <description>DELETE /api/skills/{id} : Supprime une compétence par son identifiant.</description>
     ///   </item>
+    ///   <item>
+    ///     <description>POST /api/skills/use : Utilise une compétence dans un combat.</description>
+    ///   </item>
     /// </list>
     /// </remarks>
     [ApiController]
@@ -36,14 +39,17 @@ namespace PokemonTeam.Controllers
     public class SkillsController : ControllerBase
     {
         private readonly PokemonDbContext _context;
+        private readonly ITypeChartService _typeChartService;
 
         /// <summary>
         /// Constructeur du SkillsController.
         /// </summary>
-        /// <param name="context">Contexte de la base de données pour accéder aux compétences.</param>
-        public SkillsController(PokemonDbContext context)
+        /// <param name="context">Contexte de la base de données.</param>
+        /// <param name="typeChartService">Service pour les multiplicateurs de type.</param>
+        public SkillsController(PokemonDbContext context, ITypeChartService typeChartService)
         {
             _context = context;
+            _typeChartService = typeChartService;
         }
 
         /// <summary>
@@ -54,7 +60,7 @@ namespace PokemonTeam.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Skill>>> GetSkills()
         {
-            return await _context.Skills.ToListAsync();
+            return Ok(await Skill.GetAllAsync(_context));
         }
 
         /// <summary>
@@ -65,9 +71,9 @@ namespace PokemonTeam.Controllers
         /// <response code="200">Retourne la compétence.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpGet("{id}")]
-        public async Task<ActionResult<Skill>> getSkill(int id)
+        public async Task<ActionResult<Skill>> GetSkill(int id)
         {
-            var skill = await _context.Skills.FindAsync(id);
+            var skill = await Skill.GetByIdAsync(id, _context);
             if (skill == null)
             {
                 return NotFound();
@@ -83,12 +89,10 @@ namespace PokemonTeam.Controllers
         /// <response code="201">Retourne la compétence créée.</response>
         /// <response code="400">Si la requête est invalide.</response>
         [HttpPost]
-        public async Task<ActionResult<Skill>> createSkill([FromBody] Skill skill)
+        public async Task<ActionResult<Skill>> CreateSkill([FromBody] Skill skill)
         {
-            _context.Skills.Add(skill);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(getSkill), new { id = skill.Id }, skill);
+            var createdSkill = await Skill.CreateAsync(skill, _context);
+            return CreatedAtAction(nameof(GetSkill), new { id = createdSkill.Id }, createdSkill);
         }
 
         /// <summary>
@@ -101,30 +105,20 @@ namespace PokemonTeam.Controllers
         /// <response code="400">Si l'ID de la requête ne correspond pas à celui de la compétence.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpPut("{id}")]
-        public async Task<IActionResult> updateSkill(int id, [FromBody] Skill skill)
+        public async Task<IActionResult> UpdateSkill(int id, [FromBody] Skill skill)
         {
             if (id != skill.Id)
             {
                 return BadRequest("L'ID de la compétence ne correspond pas.");
             }
 
-            _context.Entry(skill).State = EntityState.Modified;
+            var success = await Skill.UpdateAsync(id, skill, _context);
 
-            try
+            if (!success)
             {
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Skills.Any(s => s.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+
             return NoContent();
         }
 
@@ -136,17 +130,41 @@ namespace PokemonTeam.Controllers
         /// <response code="204">Suppression réussie.</response>
         /// <response code="404">Si la compétence n'est pas trouvée.</response>
         [HttpDelete("{id}")]
-        public async Task<IActionResult> deleteSkill(int id)
+        public async Task<IActionResult> DeleteSkill(int id)
         {
-            var skill = await _context.Skills.FindAsync(id);
-            if (skill == null)
+            var success = await Skill.DeleteAsync(id, _context);
+            if (!success)
             {
                 return NotFound();
             }
 
-            _context.Skills.Remove(skill);
-            await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        /// <summary>
+        /// Utilise une compétence dans un combat entre deux Pokémon.
+        /// </summary>
+        /// <param name="request">Requête contenant l'attaquant, la cible et la compétence à utiliser.</param>
+        /// <returns>Réponse indiquant les dégâts infligés et l'état de la cible.</returns>
+        /// <response code="200">Utilisation réussie de la compétence.</response>
+        /// <response code="400">Si la compétence n'a plus de PP ou autre erreur.</response>
+        [HttpPost("use")]
+        public async Task<ActionResult<UseSkillResponse>> UseSkill([FromBody] UseSkillRequest request)
+        {
+            try
+            {
+                // Le modèle Skill contient maintenant cette logique métier
+                var response = await request.Skill.UseInBattle(request.Attacker, request.Target, _typeChartService);
+                return Ok(response);
+            }
+            catch (NotEnoughPowerPointsException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (ArgumentNullException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
     }
 }

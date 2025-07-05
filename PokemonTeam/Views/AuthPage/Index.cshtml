@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "Connexion & Inscription";
+}
+
+<h2>Connexion</h2>
+
+    <input id="loginEmail" placeholder="Email" type="email">
+    <input id="loginPassword" placeholder="Mot de passe" type="password">
+    <button id="loginBtn">Se connecter</button>
+
+    <p id="loginMsg"></p>
+
+    <h2>Inscription</h2>
+
+    <input id="registerEmail" placeholder="Email" type="email">
+    <input id="registerPassword" placeholder="Mot de passe" type="password">
+    <button id="registerBtn">S'inscrire</button>
+
+    <p id="registerMsg"></p>
+
+    <script>
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        const res = await fetch('/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+            document.getElementById('loginMsg').innerText = "Connexion réussie !";
+            window.location.href = '/PariPoke'; // Redirige vers ton jeu
+        } else {
+            const err = await res.json();
+            document.getElementById('loginMsg').innerText = err || "Erreur";
+        }
+    });
+
+document.getElementById('registerBtn').addEventListener('click', async () => {
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+
+        const res = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+            document.getElementById('registerMsg').innerText = "Inscription réussie ! Vous pouvez maintenant vous connecter.";
+        } else {
+            const err = await res.json();
+            document.getElementById('registerMsg').innerText = err || "Erreur";
+        }
+    });
+    </script>

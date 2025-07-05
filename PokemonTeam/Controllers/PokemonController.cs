@@ -1,6 +1,5 @@
-﻿#if false
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using PokemonTeam.Data;
 using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
 
@@ -19,6 +18,10 @@ namespace PokemonTeam.Controllers;
 [Route("[controller]")]
 public class PokemonController : ControllerBase
 {
+    
+    
+    private readonly PokemonDbContext _ctx;
+    public PokemonController(PokemonDbContext ctx) => _ctx = ctx;
     /// <summary>
     /// This method allows a Pokémon to use a skill.
     /// </summary>
@@ -26,7 +29,7 @@ public class PokemonController : ControllerBase
     /// <returns>Damage dealt</returns>
     /// <exception cref="NotEnoughPowerPointsException"></exception>
     [HttpPost("UseSkill")]
-    public ActionResult<UseSkillResponse> UseSkill([FromBody] UseSkillRequest request)
+    public async Task<ActionResult<UseSkillResponse>> UseSkill([FromBody] UseSkillRequest request)
     {
         try
         {
@@ -34,17 +37,16 @@ public class PokemonController : ControllerBase
             Pokemon attacker = request.Attacker;
             Pokemon target = request.Target;
 
-            if (skill.powerPoints > 0)
+            if (skill.PowerPoints > 0)
             {
                 // Reduction of power points
-                skill.powerPoints--;
+                skill.PowerPoints--;
 
                 // Calculating the type multiplier
-                TypeChart typeChart = new TypeChart(skill.type);
-                double typeMultiplier = typeChart.Multiplier(target.types);
+                double typeMultiplier = await TypeChart.GetDamageMultiplierAsync(_ctx,skill.Type, target.types.ToArray());
 
                 // Calculating the damage
-                double damage = (skill.damage * (attacker.strength / (double)target.defense)) * typeMultiplier;
+                double damage = (skill.Damage * (attacker.strength / (double)target.defense)) * typeMultiplier;
                 int finalDamage = Math.Max(1, (int)damage);
 
                 // Application of the damage
@@ -64,5 +66,3 @@ public class PokemonController : ControllerBase
         }
     }
 }
-
-#endif

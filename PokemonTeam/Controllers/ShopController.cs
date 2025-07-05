@@ -1,76 +1,74 @@
-﻿#if false
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PokemonTeam.Data;
+using PokemonTeam.Models;
 
-namespace PokemonTeam.Controllers
+namespace PokemonTeam.Controllers;
+
+[ApiController]
+[Route("api/shop")]
+public class ShopController : Controller
 {
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
+    private readonly PokemonDbContext _context;
 
-    /// <summary>
-    /// Controller responsible for managing the shop and purchasing objects.
-    /// </summary>
-    /// <author>
-    /// Elerig
-    /// </author>
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ShopController : ControllerBase
+    public ShopController(PokemonDbContext context)
     {
-        private readonly ArenaContext _context;
-
-        /// <summary>
-        /// Constructor injecting the ArenaContext.
-        /// </summary>
-        /// <param name="context">Database context</param>
-        public ShopController(ArenaContext context)
-        {
-            _context = context;
-        }
-
-        /// <summary>
-        /// Retrieves the list of available objects in the shop.
-        /// </summary>
-        /// <returns>List of objects</returns>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Objet>>> GetShopItems()
-        {
-            return await _context.Objets.ToListAsync();
-        }
-
-        /// <summary>
-        /// Allows a player to buy an object using their Pokedollars.
-        /// </summary>
-        /// <param name="playerId">ID of the player</param>
-        /// <param name="objetId">ID of the object</param>
-        /// <returns>Status of the purchase</returns>
-        [HttpPost("buy/{playerId}/{objetId}")]
-        public async Task<IActionResult> BuyItem(int playerId, int objetId)
-        {
-            var player = await _context.Players.FindAsync(playerId);
-            var objet = await _context.Objets.FindAsync(objetId);
-
-            if (player == null || objet == null)
-                return NotFound("Joueur ou objet introuvable");
-
-            if (player.Pokedollar < objet.Price)
-                return BadRequest("Fonds insuffisants");
-
-            player.Pokedollar -= objet.Price;
-
-            _context.PlayerObjects.Add(new PlayerObject
-            {
-                FkPlayer = playerId,
-                FkObject = objetId
-            });
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new
-            {
-                message = "Achat réussi",
-                soldeRestant = player.Pokedollar
-            });
-        }
+        _context = context;
     }
 
+    /// <summary>
+    /// Liste tous les objets dispo.
+    /// </summary>
+    [HttpGet("list")]
+    public async Task<IActionResult> GetItems()
+    {
+        var items = await _context.Items.ToListAsync();
+        return Ok(items);
+    }
+
+    /// <summary>
+    /// Achète un objet pour le joueur connecté.
+    /// </summary>
+    [HttpPost("buy")]
+    [Authorize]
+    public async Task<IActionResult> BuyItem([FromBody] BuyItemRequest request)
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        var player = await _context.Players
+            .Include(p => p.UserAuth)
+            .Include(p => p.Items)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+        if (player == null)
+            return NotFound("Player not found");
+
+        var item = await _context.Items.FirstOrDefaultAsync(i => i.Id == request.ItemId);
+
+        if (item == null)
+            return NotFound("Item not found");
+
+        if (player.Pokedollar < item.Price)
+            return BadRequest("Not enough Pokedollar");
+
+        // Déduit le prix
+        player.Pokedollar -= item.Price;
+
+        // Ajoute l'objet au joueur (si pas déjà présent)
+        if (!player.Items.Any(i => i.Id == item.Id))
+        {
+            player.Items.Add(item);
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"Item '{item.Name}' acheté avec succès", newBalance = player.Pokedollar });
+    }
 }
-#endif
+
+public class BuyItemRequest
+{
+    public int ItemId { get; set; }
+    public string Game { get; set; } = string.Empty;
+}
