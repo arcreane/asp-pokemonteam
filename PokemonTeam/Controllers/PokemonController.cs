@@ -46,7 +46,7 @@ public class PokemonController : ControllerBase
                 double damage = (skill.Damage * (attacker.strength / (double)target.defense)) * typeMultiplier;
                 int finalDamage = Math.Max(1, (int)damage);
 
-                target.healthPoint -= finalDamage;
+                target.healthPoint -= (short)finalDamage;
 
                 var response = new UseSkillResponse(finalDamage, target);
                 return Ok(response);

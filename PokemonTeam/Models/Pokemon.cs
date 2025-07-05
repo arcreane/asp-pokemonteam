@@ -1,5 +1,7 @@
 ﻿namespace PokemonTeam.Models;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 /// <summary>
 /// This class represents a Pokemon.
 /// </summary>
@@ -45,26 +47,50 @@
 /// <seealso cref="Skill"/>
 public class Pokemon
 {
+    [Column("id")]
+    public int Id { get; set; }
+
+    [Column("name")]
     public string name { get; private set; }
-    public List<String> types { get; private set; }
-    public int healthPoint { get; set; }
-    public int maxHealthPoint { get; private set; }
-    public int accuracy { get; private set; }
-    public int defense { get; private set; }
-    public int strength { get; private set; }
-    public int speed { get; private set; }
+
+    [NotMapped]
+    public List<string> types { get; private set; } = new();
+
+    [Column("health_point")]
+    public short healthPoint { get; set; }
+
+    [Column("max_health_point")]
+    public short maxHealthPoint { get; private set; }
+    
+    [Column("defense")]
+    public short defense { get; private set; }
+
+    [Column("strength")]
+    public short strength { get; private set; }
+
+    [Column("speed")]
+    public short speed { get; private set; }
+
+    [Column("unlocked_experience")]
     public int unlockedXp { get; set; }
+
+    // relations
+    [NotMapped]
     public List<Skill>? skills { get; set; }
+
+    [NotMapped]
     public Pokemon? evolveTo { get; set; }
+
+    // EF constructor
+    public Pokemon() { }
     
     public Pokemon(string name, 
         List<String> types, 
-        int healthPoint, 
-        int maxHealthPoint, 
-        int accuracy, 
-        int defense, 
-        int strength, 
-        int speed, 
+        byte healthPoint, 
+        byte maxHealthPoint, 
+        byte defense, 
+        byte strength, 
+        byte speed, 
         int unlockedXp, 
         List<Skill> skills, 
         Pokemon evolveTo = null)
@@ -73,7 +99,6 @@ public class Pokemon
         this.types = types;
         this.healthPoint = healthPoint;
         this.maxHealthPoint = maxHealthPoint;
-        this.accuracy = accuracy;
         this.defense = defense;
         this.strength = strength;
         this.speed = speed;

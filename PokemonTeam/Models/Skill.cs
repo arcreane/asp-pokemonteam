@@ -290,7 +290,7 @@ namespace PokemonTeam.Models
             );
             
             // Appliquer les dégâts à la cible
-            target.healthPoint = Math.Max(0, target.healthPoint - damageDealt);
+            target.healthPoint = (short)Math.Max(0, target.healthPoint - damageDealt);
             
             // Retourner la réponse
             return new UseSkillResponse(damageDealt, target);
