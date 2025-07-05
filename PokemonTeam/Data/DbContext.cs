@@ -24,6 +24,8 @@ public class PokemonDbContext : DbContext
     // put here the next tables
     public DbSet<Skill> Skills {  get; set; }
     
+    public DbSet<Pokemon> Pokemons { get; set; }
+    
     public DbSet<TypeChart> TypeChart { get; set; }
     public DbSet<Player> Players { get; set; }
     public DbSet<Item> Items { get; set; }
@@ -33,6 +35,7 @@ public class PokemonDbContext : DbContext
         modelBuilder.Entity<UserAuthModel>().ToTable("user_auth");
         modelBuilder.Entity<Item>().ToTable("object");
         modelBuilder.Entity<Skill>().ToTable("skill");
+        modelBuilder.Entity<Pokemon>().ToTable("pokemon");
         modelBuilder.Entity<TypeChart>().ToTable("type");
         modelBuilder.Entity<Player>().ToTable("player");
 
