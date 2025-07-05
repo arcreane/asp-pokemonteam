@@ -1,5 +1,4 @@
 const urlParams = new URLSearchParams(window.location.search);
-const game = urlParams.get('game');
 
 fetch('/auth/check', { credentials: 'include' })
     .then(res => {

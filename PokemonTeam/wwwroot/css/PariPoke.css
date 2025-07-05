@@ -122,3 +122,29 @@
 #player-items button:hover {
     background-color: #1976D2;
 }
+
+.pokemon-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.pokemon-card {
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    width: 120px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.pokemon-card img {
+    width: 100px;
+    height: 100px;
+}
+
+.pokemon-card.selected {
+    border-color: #f00;
+    transform: scale(1.1);
+}
