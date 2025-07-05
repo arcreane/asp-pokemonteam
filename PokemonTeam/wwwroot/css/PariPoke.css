@@ -148,3 +148,21 @@
     border-color: #f00;
     transform: scale(1.1);
 }
+
+.runner-actions {
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.bet-controls {
+    max-width: 400px; /* limite la largeur totale */
+}
+
+.bet-input {
+    max-width: 150px; /* limite l'input */
+}
+
+#confirmBet {
+    white-space: nowrap; /* empêche le texte de passer à la ligne */
+}
