@@ -258,48 +258,54 @@ namespace PokemonTeam.Models
         /// </summary>
         /// <param name="attacker">Le Pokémon attaquant.</param>
         /// <param name="target">Le Pokémon cible.</param>
-        /// <param name="typeChartService">Service pour obtenir les multiplicateurs de type.</param>
+        /// <param name="ctx">Le DbContext pour le calcul des multiplicateurs de type.</param>
         /// <returns>Le résultat de l'utilisation de la compétence.</returns>
         /// <exception cref="NotEnoughPowerPointsException">Si la compétence n'a plus de PP.</exception>
         /// <exception cref="ArgumentNullException">Si un des paramètres est nul.</exception>
-        public async Task<UseSkillResponse> UseInBattle(Pokemon attacker, Pokemon target, PokemonTeam.Services.ITypeChartService typeChartService)
+        public async Task<UseSkillResponse> UseInBattle(
+            Pokemon attacker,
+            Pokemon target,
+            PokemonDbContext ctx)
         {
             if (attacker == null)
                 throw new ArgumentNullException(nameof(attacker), "L'attaquant ne peut pas être nul.");
-                
+
             if (target == null)
                 throw new ArgumentNullException(nameof(target), "La cible ne peut pas être nulle.");
-                
-            if (typeChartService == null)
-                throw new ArgumentNullException(nameof(typeChartService), "Le service de type ne peut pas être nul.");
-            
-            // Utilisation de la compétence (réduit les PP)
+
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx), "Le contexte de base de données ne peut pas être nul.");
+
+            // Consommer un PP
             this.Use();
-            
-            // Déterminer si l'attaque touche sa cible
+
+            // Vérifier la précision
             if (!this.HitsTarget())
             {
-                // L'attaque a manqué sa cible
+                // raté
                 return new UseSkillResponse(0, target);
             }
-            
-            // Utiliser le nom du type depuis la propriété calculée
-            string skillType = this.Type.ToLowerInvariant();
-            
-            // Calculer le multiplicateur de type basé sur les types de la cible
-            decimal typeMultiplier = await typeChartService.Multiplier(skillType, target.types.ToArray());
-            
-            // Calculer les dégâts
+
+            // type de l'attaque
+            string skillType = this.Type;
+
+            // récupérer le multiplicateur depuis TypeChart
+            decimal typeMultiplier = (decimal)await TypeChart.GetDamageMultiplierAsync(
+                ctx,
+                skillType,
+                target.types.ToArray()
+            );
+
+            // calcul des dégâts
             int damageDealt = this.CalculateDamage(
                 attacker.strength,
                 target.defense,
                 typeMultiplier
             );
-            
-            // Appliquer les dégâts à la cible
+
+            // appliquer les dégâts
             target.healthPoint = (short)Math.Max(0, target.healthPoint - damageDealt);
-            
-            // Retourner la réponse
+
             return new UseSkillResponse(damageDealt, target);
         }
         

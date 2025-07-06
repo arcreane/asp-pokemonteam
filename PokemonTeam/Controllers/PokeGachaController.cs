@@ -125,7 +125,7 @@ public class PokeGachaController : Controller
                     Skill = tackleSkill
                 };
 
-                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _typeChartService);
+                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _ctx);
                 history.Add($"{playerPokemon.name} utilise Tackle et inflige {result.DamageDealt} dégâts (ennemi reste {enemyPokemon.healthPoint} HP)");
 
                 if (enemyPokemon.healthPoint <= 0)
@@ -145,7 +145,7 @@ public class PokeGachaController : Controller
                     Skill = tackleSkill
                 };
 
-                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _typeChartService);
+                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _ctx);
                 history.Add($"L'ennemi utilise Tackle et inflige {result.DamageDealt} dégâts (joueur reste {playerPokemon.healthPoint} HP)");
 
                 if (playerPokemon.healthPoint <= 0)

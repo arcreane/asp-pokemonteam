@@ -166,8 +166,11 @@ namespace PokemonTeam.Controllers
         {
             try
             {
-                // Le modèle Skill contient maintenant cette logique métier
-                var response = await request.Skill.UseInBattle(request.Attacker, request.Target, _typeChartService);
+                var response = await request.Skill.UseInBattle(
+                    request.Attacker,
+                    request.Target,
+                    _context
+                );
                 return Ok(response);
             }
             catch (NotEnoughPowerPointsException ex)
@@ -179,6 +182,7 @@ namespace PokemonTeam.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
 
         /// <summary>
         /// Récupère toutes les compétences disponibles dans le jeu avec leurs informations de type.
