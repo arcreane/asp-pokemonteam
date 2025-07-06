@@ -67,7 +67,14 @@ document.getElementById('startRace').addEventListener('click', async () => {
         for (let i = 0; i < runners.length; i++) {
             if (steps[i] >= totalLengths[i]) continue;
 
-            let speed = 8;
+            // Vitesse de base
+            let baseSpeed = 8;
+
+            // Ajoute un facteur random à CHAQUE STEP
+            let randomFactor = Math.random() * 6;
+            let speed = baseSpeed + randomFactor;
+
+            // Ajoute boost si c'est le Pokémon sélectionné
             if (runners[i].name.toLowerCase() === selectedPokemon.toLowerCase()) {
                 speed += window.activeBoost || 0;
             }
@@ -133,4 +140,5 @@ document.getElementById('startRace').addEventListener('click', async () => {
             PreviewUtils.buildPreviewRunners(selectedRunners);
         }
     }, 50);
+
 });
