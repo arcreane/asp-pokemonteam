@@ -2,6 +2,7 @@ using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Models;
 
+
 namespace PokemonTeam.Data;
 
 /// <summary>
@@ -24,13 +25,15 @@ public class PokemonDbContext : DbContext
     public DbSet<UserAuthModel> UserAuths { get; set; }
     // put here the next tables
     public DbSet<Skill> Skills {  get; set; }
-    public DbSet<Objet> Objets { get; set; }
+    public DbSet<ObjectModel> Objects { get; set; }
+    public DbSet<Player> Players { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserAuthModel>().ToTable("user_auth");
         modelBuilder.Entity<Skill>().ToTable("skill");
         // put here the next tables 
-        modelBuilder.Entity<Objet>().ToTable("objet");
+        modelBuilder.Entity<Object>().ToTable("object");
         modelBuilder.Entity<Player>().ToTable("player");
         modelBuilder.Entity<PlayerObject>().ToTable("player_object");
 
@@ -38,5 +41,7 @@ public class PokemonDbContext : DbContext
         modelBuilder.Entity<PlayerObject>()
             .HasKey(po => new { po.FkPlayer, po.FkObject });
     }
+    public DbSet<PlayerObject> PlayerObjects { get; set; }
+
 }
-}
+

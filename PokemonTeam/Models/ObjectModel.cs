@@ -19,10 +19,10 @@ namespace PokemonTeam.Models
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("Objet")]
-    public class Objet
+    public class ObjectModel
     {
         [Key]
-        public int ObjetId { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(50)]
@@ -33,5 +33,7 @@ namespace PokemonTeam.Models
 
         [Range(0, int.MaxValue)]
         public int Price { get; set; }
+        public ICollection<PlayerObject> PlayerObjects { get; set; }
+
     }
 }

@@ -34,8 +34,8 @@ namespace PokemonTeam.Controllers
         /// </summary>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Objet>>> GetShopItems()
-            => await _context.Objets.AsNoTracking().ToListAsync();
+        public async Task<ActionResult<IEnumerable<Object>>> GetShopItems()
+            => await _context.Objects.AsNoTracking().ToListAsync();
 
         /// <summary>
         /// Achète un objet pour un joueur après vérification du solde.
@@ -50,9 +50,9 @@ namespace PokemonTeam.Controllers
         {
             var player = await _context.Players
                                        .Include(p => p.PlayerObjects)
-                                       .SingleOrDefaultAsync(p => p.PlayerId == playerId);
+                                       .SingleOrDefaultAsync(p => p.Id == playerId);
 
-            var objet = await _context.Objets.FindAsync(objetId);
+            var objet = await _context.Objects.FindAsync(objetId);
 
             if (player is null || objet is null)
                 return NotFound("Joueur ou objet introuvable.");
@@ -67,8 +67,7 @@ namespace PokemonTeam.Controllers
             _context.PlayerObjects.Add(new PlayerObject
             {
                 FkPlayer = playerId,
-                FkObject = objetId,
-                PurchaseDate = DateTime.UtcNow
+                FkObject = objetId
             });
 
             await _context.SaveChangesAsync();
@@ -77,7 +76,7 @@ namespace PokemonTeam.Controllers
             {
                 message = "Achat réussi.",
                 soldeRestant = player.Pokedollar,
-                objet = new { objet.ObjetId, objet.Name, objet.Description }
+                objet = new { objet.Id, objet.Name, objet.Description }
             });
         }
     }
