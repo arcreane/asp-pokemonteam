@@ -19,7 +19,7 @@ document.getElementById('startRace').addEventListener('click', async () => {
         return;
     }
 
-    const selectedPokemon = document.getElementById('selectedBetPokemon').value;
+    const selectedPokemon = document.getElementById('selectedBetPokemon').value.trim();
     const betAmount = parseInt(document.getElementById('betAmount').value, 10);
 
     if (!selectedPokemon || isNaN(betAmount) || betAmount <= 0) {
@@ -27,18 +27,22 @@ document.getElementById('startRace').addEventListener('click', async () => {
         return;
     }
 
-    // Nettoyer runners et previews
-    track.querySelectorAll('.runner, .preview-runner').forEach(img => img.remove());
+    console.log(`✅ Pari sur : ${selectedPokemon}, mise : ${betAmount} pokédollars`);
+
+    // Nettoyer
+    track.querySelectorAll('.runner-wrapper, .preview-runner').forEach(el => el.remove());
 
     const runners = [];
 
-    // Placer les vrais coureurs
     for (let i = 0; i < selectedRunners.length; i++) {
-        const pokeName = selectedRunners[i];
-        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeName}`);
+        const pokeName = selectedRunners[i].trim();
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeName.toLowerCase()}`);
         const data = await res.json();
         const spriteUrl = data.sprites.back_default;
         const spriteFront = data.sprites.front_default;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'runner-wrapper';
 
         const img = document.createElement('img');
         img.src = spriteUrl;
@@ -50,12 +54,22 @@ document.getElementById('startRace').addEventListener('click', async () => {
             }
         }
 
-        track.appendChild(img);
+        wrapper.appendChild(img);
+        track.appendChild(wrapper);
 
-        runners.push({ img: img, front: spriteFront, name: pokeName });
+        runners.push({
+            wrapper: wrapper,
+            img: img,
+            front: spriteFront,
+            name: pokeName,
+            strength: 50 + Math.floor(Math.random() * 20),
+            defense: 30 + Math.floor(Math.random() * 20),
+            healthPoint: 100,
+            types: ["normal"]
+        });
 
         const point = paths[i].getPointAtLength(startOffsets[i]);
-        img.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
+        wrapper.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
     }
 
     const steps = [...startOffsets];
@@ -67,14 +81,8 @@ document.getElementById('startRace').addEventListener('click', async () => {
         for (let i = 0; i < runners.length; i++) {
             if (steps[i] >= totalLengths[i]) continue;
 
-            // Vitesse de base
-            let baseSpeed = 8;
+            let speed = 8 + Math.random() * 6;
 
-            // Ajoute un facteur random à CHAQUE STEP
-            let randomFactor = Math.random() * 6;
-            let speed = baseSpeed + randomFactor;
-
-            // Ajoute boost si c'est le Pokémon sélectionné
             if (runners[i].name.toLowerCase() === selectedPokemon.toLowerCase()) {
                 speed += window.activeBoost || 0;
             }
@@ -82,7 +90,7 @@ document.getElementById('startRace').addEventListener('click', async () => {
             steps[i] += speed;
 
             const point = paths[i].getPointAtLength(steps[i]);
-            runners[i].img.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
+            runners[i].wrapper.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
 
             if (steps[i] >= totalLengths[i] && winnerIndex === -1) {
                 winnerIndex = i;
@@ -90,14 +98,73 @@ document.getElementById('startRace').addEventListener('click', async () => {
             }
         }
 
+        // ⚡ Attaque random
+        if (Math.random() < 0.02) {
+            const attackerIndex = Math.floor(Math.random() * runners.length);
+            let targetIndex = Math.floor(Math.random() * runners.length);
+            while (targetIndex === attackerIndex) {
+                targetIndex = Math.floor(Math.random() * runners.length);
+            }
+
+            const attacker = runners[attackerIndex];
+            const target = runners[targetIndex];
+
+            console.log(`⚡ ${attacker.name} attaque ${target.name}`);
+
+            fetch('api/Skills/use', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    Attacker: {
+                        name: attacker.name,
+                        strength: attacker.strength,
+                        defense: attacker.defense,
+                        healthPoint: attacker.healthPoint,
+                        types: attacker.types
+                    },
+                    Target: {
+                        name: target.name,
+                        strength: target.strength,
+                        defense: target.defense,
+                        healthPoint: target.healthPoint,
+                        types: target.types
+                    },
+                    Skill: {
+                        Id: 1,
+                        Name: "Tackle",
+                        Damage: 10,
+                        PowerPoints: 10,
+                        Accuracy: 95,
+                        fk_type: 1
+                    }
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    console.log(`💥 ${attacker.name} inflige ${data.damageDealt} à ${target.name}`);
+                    steps[targetIndex] -= 20;
+
+                    // ✅ Même effet que boost : on ajoute une classe temporaire
+                    target.img.classList.add('attacked-runner');
+                    setTimeout(() => {
+                        target.img.classList.remove('attacked-runner');
+                    }, 300);
+                })
+                .catch(err => console.error("Erreur attaque:", err));
+        }
+
         if (finished) {
             clearInterval(interval);
 
-            const winnerName = runners[winnerIndex].name;
+            const winnerName = runners[winnerIndex].name.trim();
             const winnerSprite = runners[winnerIndex].front;
 
+            console.log(`🏁 Gagnant : ${winnerName}`);
+            console.log(`🎯 Ton pari : ${selectedPokemon}`);
+
             let gain = 0;
-            if (selectedPokemon.toLowerCase() === winnerName) {
+            if (winnerName.toLowerCase() === selectedPokemon.toLowerCase()) {
                 gain = betAmount;
             }
 
@@ -113,11 +180,11 @@ document.getElementById('startRace').addEventListener('click', async () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Réponse backend:", data);
+                    console.log("✅ Réponse backend:", data);
                     document.getElementById('player-balance').innerText = data.pokedollar;
                 })
                 .catch(error => {
-                    console.error("Erreur maj pokédollars:", error);
+                    console.error("❌ Erreur maj pokédollars:", error);
                 });
 
             document.getElementById('victoryTitle').innerText = `Victoire de ${winnerName}!`;
@@ -135,10 +202,8 @@ document.getElementById('startRace').addEventListener('click', async () => {
                 boostInfo.style.display = 'none';
             }
 
-            // Clean tout puis reconstruire
-            track.querySelectorAll('.runner, .preview-runner').forEach(img => img.remove());
+            track.querySelectorAll('.runner-wrapper, .preview-runner').forEach(el => el.remove());
             PreviewUtils.buildPreviewRunners(selectedRunners);
         }
     }, 50);
-
 });
