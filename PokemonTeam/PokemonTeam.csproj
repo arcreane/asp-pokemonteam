@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <None Include="appsettings.Development.json" />
+    <None Include="wwwroot\audio\fight.mp3" />
+    <None Include="wwwroot\audio\victory.mp3" />
   </ItemGroup>
 
   <ItemGroup>

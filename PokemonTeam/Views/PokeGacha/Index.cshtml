@@ -45,7 +45,9 @@ ViewData["Title"] = "PokeGacha";
     </div>
 </div>
 
-<audio id="gachaSound" src="https://vgmsite.com/soundtracks/pokemon-red-blue-yellow-gameboy-soundtrack/ljmxehvo/112%20-%20Caught%20Pokemon.mp3"></audio>
+<audio id="gachaSound" src="~/audio/gacha.mp3"></audio>
+<audio id="fightSound" src="~/audio/fight.mp3"></audio>
+<audio id="victorySound" src="~/audio/victory.mp3"></audio>
 
 <style>
     @@keyframes charge {
@@ -179,7 +181,13 @@ ViewData["Title"] = "PokeGacha";
 
     // combat
     const fightBtn = document.getElementById("fightBtn");
+    const fightSound = document.getElementById("fightSound");
+    const victorySound = document.getElementById("victorySound");
+    
     fightBtn.addEventListener("click", () => {
+        fightSound.pause();
+        fightSound.currentTime = 0;
+        fightSound.play();
         fightBtn.disabled = true;
         fightBtn.textContent = "Combat en cours...";
         document.getElementById("battleLog").innerHTML = "";
@@ -201,7 +209,13 @@ ViewData["Title"] = "PokeGacha";
                         fightBtn.textContent = "Combat Pokémon";
                         document.getElementById("pokedollar").textContent = data.currentPokedollar;
                         currentPokedollar = data.currentPokedollar;
-
+                        const lastLine = data.history[data.history.length - 1];
+                        fightSound.pause();
+                        fightSound.currentTime = 0;
+                        if (lastLine.includes("a gagné") && lastLine.includes("style='color:green'")) {
+                            victorySound.play();
+                        }
+                        
                         return;
                     }
 
