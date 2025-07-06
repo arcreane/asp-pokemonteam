@@ -1,104 +1,20 @@
 @{
-  ViewData["Title"] = "PariPoke";
-  Layout = "_Layout";
+ViewData["Title"] = "Accueil - PokeRace";
 }
+<h2>Mon Jeu</h2>
+<p>Bienvenue dans le jeu ! Choisis un Pokémon et prépare-toi à la course.</p>
+@Html.Partial("_ShopPartial")
+@Html.Partial("_RunnerSelection")
+@Html.Partial("_BetSelection")
+@Html.Partial("_GamePartial")
+@Html.Partial("_PlayerInfoPartial")
 
-<h2>Course Pokémon - Parie ton Pokédollar</h2>
-
-<label for="pokemon">Choisis ton Pokémon :</label>
-<select id="pokemon">
-  <option value="Pikachu">Pikachu</option>
-  <option value="Bulbasaur">Bulbasaur</option>
-  <option value="Charmander">Charmander</option>
-  <option value="Squirtle">Squirtle</option>
-</select>
-
-<br />
-
-<label for="mise">Montant du pari :</label>
-<input id="mise" type="number" value="10" min="1" />
-
-<br />
-
-<button id="startRace">Démarrer la course</button>
-
-<div id="result"></div>
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const game = urlParams.get('game');
-
-  if (game) {
-    // Récupère l'utilisateur connecté
-    fetch('/auth/check', { credentials: 'include' })
-      .then(res => res.ok ? res.json() : Promise.reject('Not logged'))
-      .then(async data => {
-        const email = data.email;
-
-        // Vérifie si le Player existe pour ce jeu
-        const resPlayer = await fetch(`/api/player/me?game=${game}`, { credentials: 'include' });
-
-        if (resPlayer.ok) {
-          const player = await resPlayer.json();
-          document.getElementById('player-info').innerText = `👋 ${player.name}`;
-        } else {
-          // Crée le Player automatiquement
-          const prefix = email.split('@@')[0];
-          const playerName = `${prefix}-${game}`;
-
-          const createRes = await fetch('/api/player/create', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: playerName, game: game })
-          });
-
-          if (createRes.ok) {
-            const newPlayer = await createRes.json();
-            document.getElementById('player-info').innerText = `👋 ${newPlayer.name}`;
-          } else {
-            console.error("Erreur création profil joueur");
-          }
-        }
-      })
-      .catch(err => console.log('Utilisateur non connecté'));
-  }
-</script>
-
-<script>
-  document.getElementById('startRace').addEventListener('click', async () => {
-    const selectedPokemon = document.getElementById('pokemon').value;
-    const mise = parseInt(document.getElementById('mise').value);
-
-    // Tirage au hasard du vainqueur
-    const pokemons = ["Pikachu", "Bulbasaur", "Charmander", "Squirtle"];
-    const winner = pokemons[Math.floor(Math.random() * pokemons.length)];
-
-    let gain = 0;
-    let message = "";
-
-    if (selectedPokemon === winner) {
-      gain = mise; // Gagne la mise en plus = x2
-      message = `Bravo ! ${winner} a gagné ! Tu gagnes ${gain} pokédollars.`;
-    } else {
-      gain = 0; // Perte
-      message = `Perdu ! ${winner} a gagné ! Tu perds 0 pokédollars.`;
-    }
-
-    // MAJ backend
-    await fetch('/api/player/update', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        game: "PariPoke",
-        experience: 0,
-        pokedollar: gain
-      })
-    });
-
-    document.getElementById('result').innerText = message;
-  });
-</script>
-
-
-
+@section Scripts {
+    <script src="~/js/PariPoke/common.js"></script>
+    <script src="~/js/PlayerProfileHeader.js"></script>
+    <script src="/js/PariPoke/previewUtils.js"></script>
+    <script src="~/js/shop.js"></script>
+    <script src="~/js/PariPoke/runnerSelection.js"></script>
+    <script src="~/js/PariPoke/betSelection.js"></script>
+    <script src="~/js/PariPoke/Game.js"></script>
+}

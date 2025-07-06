@@ -38,6 +38,8 @@ public class TypeChart
     public string typeName { get; private set; }
     
     public decimal fire { get; private set; }
+    
+    public decimal normal { get; private set; }
     public decimal water { get; private set; }
     public decimal grass { get; private set; }
     public decimal electric { get; private set; }
@@ -60,6 +62,7 @@ public class TypeChart
             new Dictionary<string, Func<TypeChart, decimal>>(StringComparer.OrdinalIgnoreCase)
         {
             ["fire"]     = r => r.fire,
+            ["normal"] = r => r.normal,
             ["water"]    = r => r.water,
             ["grass"]    = r => r.grass,
             ["electric"] = r => r.electric,

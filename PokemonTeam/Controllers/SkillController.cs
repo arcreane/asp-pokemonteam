@@ -5,6 +5,7 @@ using PokemonTeam.Models;
 using PokemonTeam.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace PokemonTeam.Controllers
 {
@@ -31,6 +32,18 @@ namespace PokemonTeam.Controllers
     ///   </item>
     ///   <item>
     ///     <description>POST /api/skills/use : Utilise une compétence dans un combat.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>GET /api/skills/all : Récupère toutes les compétences avec leurs types.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>GET /api/skills/by-type/{typeName} : Récupère les compétences par type.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>GET /api/skills/search/{name} : Recherche des compétences par nom.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description>GET /api/skills/damage-range : Récupère les compétences par plage de dégâts.</description>
     ///   </item>
     /// </list>
     /// </remarks>
@@ -153,8 +166,11 @@ namespace PokemonTeam.Controllers
         {
             try
             {
-                // Le modèle Skill contient maintenant cette logique métier
-                var response = await request.Skill.UseInBattle(request.Attacker, request.Target, _typeChartService);
+                var response = await request.Skill.UseInBattle(
+                    request.Attacker,
+                    request.Target,
+                    _context
+                );
                 return Ok(response);
             }
             catch (NotEnoughPowerPointsException ex)
@@ -164,6 +180,150 @@ namespace PokemonTeam.Controllers
             catch (ArgumentNullException ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+        }
+
+
+        /// <summary>
+        /// Récupère toutes les compétences disponibles dans le jeu avec leurs informations de type.
+        /// </summary>
+        /// <returns>Liste complète de toutes les compétences.</returns>
+        /// <response code="200">Retourne la liste complète des compétences.</response>
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<Skill>>> GetAllSkills()
+        {
+            try
+            {
+                // Utilise la méthode statique existante de votre classe Skill
+                var skills = await Skill.GetAllAsync(_context);
+                return Ok(skills);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de la récupération des compétences", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Récupère les compétences par type spécifique.
+        /// </summary>
+        /// <param name="typeName">Le nom du type de compétence recherché.</param>
+        /// <returns>Les compétences du type spécifié.</returns>
+        /// <response code="200">Retourne les compétences du type spécifié.</response>
+        /// <response code="404">Si aucune compétence n'est trouvée pour ce type.</response>
+        [HttpGet("by-type/{typeName}")]
+        public async Task<ActionResult<IEnumerable<Skill>>> GetSkillsByType(string typeName)
+        {
+            try
+            {
+                // Recherche par type via la relation avec TypeChart
+                var skills = await _context.Skills
+                    .Include(s => s.TypeChart)
+                    .Where(s => s.TypeChart != null && s.TypeChart.typeName.ToLower() == typeName.ToLower())
+                    .ToListAsync();
+
+                if (!skills.Any())
+                {
+                    return NotFound($"Aucune compétence trouvée pour le type '{typeName}'.");
+                }
+
+                return Ok(skills);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de la récupération des compétences par type", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Recherche des compétences par nom (recherche partielle).
+        /// </summary>
+        /// <param name="name">Une partie du nom de la compétence à rechercher.</param>
+        /// <returns>Les compétences correspondant à la recherche.</returns>
+        /// <response code="200">Retourne les compétences trouvées.</response>
+        /// <response code="404">Si aucune compétence n'est trouvée.</response>
+        [HttpGet("search/{name}")]
+        public async Task<ActionResult<IEnumerable<Skill>>> SearchSkillsByName(string name)
+        {
+            try
+            {
+                var skills = await _context.Skills
+                    .Include(s => s.TypeChart)
+                    .Where(s => s.Name.ToLower().Contains(name.ToLower()))
+                    .ToListAsync();
+
+                if (!skills.Any())
+                {
+                    return NotFound($"Aucune compétence trouvée contenant '{name}'.");
+                }
+
+                return Ok(skills);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de la recherche de compétences", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Récupère les compétences ayant des dégâts dans une plage donnée.
+        /// </summary>
+        /// <param name="minDamage">Dégâts minimum.</param>
+        /// <param name="maxDamage">Dégâts maximum.</param>
+        /// <returns>Les compétences dans la plage de dégâts spécifiée.</returns>
+        /// <response code="200">Retourne les compétences dans la plage de dégâts.</response>
+        [HttpGet("damage-range")]
+        public async Task<ActionResult<IEnumerable<Skill>>> GetSkillsByDamageRange([FromQuery] int minDamage = 0, [FromQuery] int maxDamage = 999)
+        {
+            try
+            {
+                var skills = await _context.Skills
+                    .Include(s => s.TypeChart)
+                    .Where(s => s.Damage >= minDamage && s.Damage <= maxDamage)
+                    .OrderBy(s => s.Damage)
+                    .ToListAsync();
+
+                return Ok(skills);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de la récupération des compétences par dégâts", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Récupère les compétences d'un Pokémon spécifique par son ID.
+        /// </summary>
+        /// <param name="pokemonId">L'identifiant du Pokémon.</param>
+        /// <returns>Les compétences du Pokémon spécifié.</returns>
+        /// <response code="200">Retourne les compétences du Pokémon.</response>
+        /// <response code="404">Si le Pokémon n'est pas trouvé ou n'a pas de compétences.</response>
+        [HttpGet("pokemon/{pokemonId}")]
+        public async Task<ActionResult<IEnumerable<object>>> GetSkillsByPokemon(int pokemonId)
+        {
+            try
+            {
+                // Utiliser une requête brute pour récupérer les skills d'un Pokémon
+                var skillIds = await _context.Database
+                    .SqlQuery<int>($"SELECT fk_skill FROM pokemon_skill WHERE fk_pokemon = {pokemonId}")
+                    .ToListAsync();
+
+                if (!skillIds.Any())
+                {
+                    return NotFound($"Aucune compétence trouvée pour le Pokémon avec l'ID {pokemonId}.");
+                }
+
+                // Récupérer les skills complètes avec leurs types
+                var skills = await _context.Skills
+                    .Include(s => s.TypeChart)
+                    .Where(s => skillIds.Contains(s.Id))
+                    .ToListAsync();
+
+                return Ok(skills);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Erreur lors de la récupération des compétences du Pokémon", details = ex.Message });
             }
         }
     }

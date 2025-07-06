@@ -6,6 +6,7 @@
     <title>@ViewData["Title"] - PokemonTeam</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/PariPoke.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PokemonTeam.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -26,6 +27,12 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="PariPoke" asp-action="">PariPoke</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="PokeGacha" asp-action="">PokeGacha</a>
                     </li>
                 </ul>
 
@@ -63,34 +70,9 @@
 </footer>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/PlayerProfileHeader.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
-<script>
-  fetch('/auth/check', { credentials: 'include' })
-    .then(res => {
-      if (res.status === 200) {
-        return res.json();
-      } else {
-        throw new Error('Not logged in');
-      }
-    })
-    .then(data => {
-      document.getElementById('auth-buttons').style.display = 'none';
-      document.getElementById('logout-section').style.display = 'block';
-      document.getElementById('player-info').innerText = `👋 ${data.email}`;
-    })
-    .catch(err => {
-      console.log('Pas connecté');
-    });
-
-  document.getElementById('logout-btn').addEventListener('click', async () => {
-    await fetch('/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
-    window.location.href = '/';
-  });
-</script>
 
 
 </body>

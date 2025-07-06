@@ -31,7 +31,7 @@
 
         if (res.ok) {
             document.getElementById('loginMsg').innerText = "Connexion réussie !";
-            window.location.href = '/PariPoke'; // Redirige vers ton jeu
+            window.location.href = '/'; // ⏎ redirection vers Home
         } else {
             const err = await res.json();
             document.getElementById('loginMsg').innerText = err || "Erreur";
@@ -49,10 +49,12 @@ document.getElementById('registerBtn').addEventListener('click', async () => {
         });
 
         if (res.ok) {
-            document.getElementById('registerMsg').innerText = "Inscription réussie ! Vous pouvez maintenant vous connecter.";
+            document.getElementById('loginMsg').innerText = "Connexion réussie !";
+            window.location.href = '/'; // ⏎ redirection vers Home
         } else {
             const err = await res.json();
-            document.getElementById('registerMsg').innerText = err || "Erreur";
+            document.getElementById('loginMsg').innerText = err || "Erreur";
         }
-    });
-    </script>
+
+});
+</script>
