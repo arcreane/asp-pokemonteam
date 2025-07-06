@@ -12,15 +12,15 @@ ViewData["Title"] = "PokeGacha";
             <small>Prix du pull : 10 pokédollars</small>
         </div>
         <button id="draw" style="border:none; background:none;">
-            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif"
-                 alt="Pokeball" width="80" />
+            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" />
         </button>
         <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- droite = pokedex + combat -->
+    <!-- droite -->
     <div style="flex: 1; display: flex; flex-direction: column;">
+        <!-- pokedex -->
         <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
             <h3>Pokédex</h3>
             <div id="pokedexLoading" style="text-align:center;">
@@ -31,15 +31,34 @@ ViewData["Title"] = "PokeGacha";
                 <!-- sprites -->
             </div>
         </div>
+
+        <!-- module de combat -->
         <div id="future" style="flex: 1; padding: 1rem;">
             <h3>Module de combat</h3>
-            <button id="fightBtn" style="margin-top:10px; font-weight:bold;">Combat Pokémon</button>
+            <div id="battleField" style="position:relative; height:150px; border:1px solid #ccc; margin-bottom:10px; overflow:hidden;">
+                <img id="playerSprite" src="" style="position:absolute; bottom:0; left:10px; transform:scaleX(-1); width:80px;" />
+                <img id="enemySprite" src="" style="position:absolute; bottom:0; right:10px; width:80px;" />
+            </div>
+            <button id="fightBtn" style="font-weight:bold;">Combat Pokémon</button>
             <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
         </div>
     </div>
 </div>
 
 <audio id="gachaSound" src="https://vgmsite.com/soundtracks/pokemon-red-blue-yellow-gameboy-soundtrack/ljmxehvo/112%20-%20Caught%20Pokemon.mp3"></audio>
+
+<style>
+    @@keyframes charge {
+        0%   { transform: translateX(0); }
+        50%  { transform: translateX(20px); }
+        100% { transform: translateX(0); }
+    }
+    @@keyframes chargeReverse {
+        0%   { transform: scaleX(-1) translateX(0); }
+        50%  { transform: scaleX(-1) translateX(-20px); }
+        100% { transform: scaleX(-1) translateX(0); }
+    }
+</style>
 
 @section Scripts {
 <script>
@@ -101,7 +120,6 @@ ViewData["Title"] = "PokeGacha";
                 document.getElementById("pokedexLoading").innerHTML = `<p style="color:red">Erreur de chargement du Pokédex</p>`;
             });
     });
-
 
     const drawButton = document.getElementById("draw");
     const loading = document.getElementById("loading");
@@ -172,25 +190,43 @@ ViewData["Title"] = "PokeGacha";
                 const logElement = document.getElementById("battleLog");
                 let i = 0;
 
+                // load sprites
+                document.getElementById("playerSprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.playerPokemonId}.png`;
+                document.getElementById("enemySprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.enemyPokemonId}.png`;
+
                 const interval = setInterval(() => {
                     if (i >= data.history.length) {
                         clearInterval(interval);
                         fightBtn.disabled = false;
                         fightBtn.textContent = "Combat Pokémon";
                         document.getElementById("pokedollar").textContent = data.currentPokedollar;
+                        currentPokedollar = data.currentPokedollar;
+
                         return;
                     }
+
                     const line = document.createElement("div");
                     line.innerHTML = data.history[i];
                     logElement.appendChild(line);
                     logElement.scrollTop = logElement.scrollHeight;
+
+                    const playerStarts = data.playerStarts;
+                    if (i > 0 && !line.innerHTML.includes("a gagné")) {
+                        if ((i % 2 === 1 && playerStarts) || (i % 2 === 0 && !playerStarts)) {
+                            const sprite = document.getElementById("playerSprite");
+                            sprite.style.animation = "chargeReverse 0.5s forwards";
+                            setTimeout(() => sprite.style.animation = "", 500);
+                        } else {
+                            const sprite = document.getElementById("enemySprite");
+                            sprite.style.animation = "charge 0.5s forwards";
+                            setTimeout(() => sprite.style.animation = "", 500);
+                        }
+                    }
+                    
                     i++;
                 }, 1000);
             })
-            .catch(err => alert(err.message))
-            .finally(() => {
-                //
-            });
+            .catch(err => alert(err.message));
     });
 </script>
 }

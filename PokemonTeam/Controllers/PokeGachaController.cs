@@ -162,9 +162,13 @@ public class PokeGachaController : Controller
         {
             history,
             playerPokemon = playerPokemon.name,
+            playerPokemonId = playerPokemon.Id,
             enemyPokemon = enemyPokemon.name,
+            enemyPokemonId = enemyPokemon.Id,
+            playerStarts = playerPokemon.speed >= enemyPokemon.speed,
             currentPokedollar = player.Pokedollar
         });
+
     }
 
 }
