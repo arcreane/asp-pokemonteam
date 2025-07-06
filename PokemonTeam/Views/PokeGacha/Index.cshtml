@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "PokeGacha";
+ViewData["Title"] = "PokeGacha";
 }
 
 <div style="display: flex; height: 100vh;">
@@ -19,13 +19,22 @@
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- droite -->
+    <!-- droite = pokedex + combat -->
     <div style="flex: 1; display: flex; flex-direction: column;">
-        <div id="history" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
-            <h3>Historique</h3>
+        <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
+            <h3>Pokédex</h3>
+            <div id="pokedexLoading" style="text-align:center;">
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" style="width:60px;"/>
+                <p>Chargement du Pokédex...</p>
+            </div>
+            <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
+                <!-- sprites -->
+            </div>
         </div>
         <div id="future" style="flex: 1; padding: 1rem;">
-            <h3>À venir</h3>
+            <h3>Module de combat</h3>
+            <button id="fightBtn" style="margin-top:10px; font-weight:bold;">Combat Pokémon</button>
+            <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
         </div>
     </div>
 </div>
@@ -36,13 +45,29 @@
 <script>
     const game = "pokeGacha";
     let currentPokedollar = 0;
+    let capturedPokemonIds = [];
 
-    // au chargement
+    function renderPokedex() {
+        const container = document.getElementById("pokedexGrid");
+        container.innerHTML = "";
+        container.style.display = "grid";
+        document.getElementById("pokedexLoading").style.display = "none";
+
+        for (let id = 1; id <= 151; id++) {
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+            const isCaptured = capturedPokemonIds.includes(id);
+            container.innerHTML += `
+                <img src="${spriteUrl}"
+                     style="width:50px; filter:${isCaptured ? 'none' : 'grayscale(100%)'};"
+                     alt="pokemon ${id}" />
+            `;
+        }
+    }
+
     window.addEventListener("load", () => {
         fetch(`/api/player/me?game=${game}`)
             .then(res => {
                 if (res.status === 404) {
-                    // pas de joueur → on le crée
                     return fetch("/api/player/create", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -58,6 +83,13 @@
             .then(player => {
                 document.getElementById("pokedollar").textContent = player.pokedollar;
                 currentPokedollar = player.pokedollar;
+
+                return fetch("/PokeGacha/CapturedByMe");
+            })
+            .then(res => res.json())
+            .then(ids => {
+                capturedPokemonIds = ids;
+                renderPokedex();
             })
             .catch(err => console.error(err));
     });
@@ -94,14 +126,10 @@
                         <p>SPD: ${pokemon.speed}</p>
                     </div>
                 `;
-                document.getElementById("history").innerHTML += `
-                    <img src="${spriteUrl}" alt="${pokemon.name}" width="40" style="margin:2px;" />
-                `;
 
                 currentPokedollar = data.pokedollar;
                 document.getElementById("pokedollar").textContent = data.pokedollar;
 
-                // ajout du pokémon au joueur
                 fetch("/Pokemon/addPokemonToPlayer", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -110,10 +138,41 @@
                         game: game
                     })
                 })
-                .catch(err => console.error("Erreur association joueur/pokemon:", err));
+                    .then(() => {
+                        if (!capturedPokemonIds.includes(pokemon.id)) {
+                            capturedPokemonIds.push(pokemon.id);
+                            renderPokedex();
+                        }
+                    })
+                    .catch(err => console.error("Erreur association joueur/pokemon:", err));
             })
             .catch(err => alert(err.message))
             .finally(() => loading.style.display = "none");
+    });
+
+    // combat
+    const fightBtn = document.getElementById("fightBtn");
+    fightBtn.addEventListener("click", () => {
+        fightBtn.disabled = true;
+        fightBtn.textContent = "Combat en cours...";
+        document.getElementById("battleLog").innerHTML = "";
+
+        fetch("/PokeGacha/StartBattle", { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+                let log = "<h4>Combat terminé !</h4><ul>";
+                data.history.forEach(event => {
+                    log += `<li>${event}</li>`;
+                });
+                log += "</ul>";
+                document.getElementById("battleLog").innerHTML = log;
+                document.getElementById("pokedollar").textContent = data.currentPokedollar;
+            })
+            .catch(err => alert(err.message))
+            .finally(() => {
+                fightBtn.disabled = false;
+                fightBtn.textContent = "Combat Pokémon";
+            });
     });
 </script>
 }
