@@ -19,7 +19,7 @@ ViewData["Title"] = "PokeGacha";
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- droite = pokedex -->
+    <!-- droite = pokedex + combat -->
     <div style="flex: 1; display: flex; flex-direction: column;">
         <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
             <h3>Pokédex</h3>
@@ -28,11 +28,13 @@ ViewData["Title"] = "PokeGacha";
                 <p>Chargement du Pokédex...</p>
             </div>
             <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
-                <!-- sprites seront injectés ici -->
+                <!-- sprites -->
             </div>
         </div>
         <div id="future" style="flex: 1; padding: 1rem;">
-            <h3>À venir</h3>
+            <h3>Module de combat</h3>
+            <button id="fightBtn" style="margin-top:10px; font-weight:bold;">Combat Pokémon</button>
+            <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
         </div>
     </div>
 </div>
@@ -48,8 +50,8 @@ ViewData["Title"] = "PokeGacha";
     function renderPokedex() {
         const container = document.getElementById("pokedexGrid");
         container.innerHTML = "";
-        container.style.display = "grid"; // montrer la grille
-        document.getElementById("pokedexLoading").style.display = "none"; // cacher le spinner
+        container.style.display = "grid";
+        document.getElementById("pokedexLoading").style.display = "none";
 
         for (let id = 1; id <= 151; id++) {
             const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
@@ -62,12 +64,10 @@ ViewData["Title"] = "PokeGacha";
         }
     }
 
-    // au chargement
     window.addEventListener("load", () => {
         fetch(`/api/player/me?game=${game}`)
             .then(res => {
                 if (res.status === 404) {
-                    // pas de joueur → on le crée
                     return fetch("/api/player/create", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -84,7 +84,6 @@ ViewData["Title"] = "PokeGacha";
                 document.getElementById("pokedollar").textContent = player.pokedollar;
                 currentPokedollar = player.pokedollar;
 
-                // récupère les pokémons capturés
                 return fetch("/PokeGacha/CapturedByMe");
             })
             .then(res => res.json())
@@ -131,7 +130,6 @@ ViewData["Title"] = "PokeGacha";
                 currentPokedollar = data.pokedollar;
                 document.getElementById("pokedollar").textContent = data.pokedollar;
 
-                // ajout du pokémon au joueur
                 fetch("/Pokemon/addPokemonToPlayer", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -150,6 +148,31 @@ ViewData["Title"] = "PokeGacha";
             })
             .catch(err => alert(err.message))
             .finally(() => loading.style.display = "none");
+    });
+
+    // combat
+    const fightBtn = document.getElementById("fightBtn");
+    fightBtn.addEventListener("click", () => {
+        fightBtn.disabled = true;
+        fightBtn.textContent = "Combat en cours...";
+        document.getElementById("battleLog").innerHTML = "";
+
+        fetch("/PokeGacha/StartBattle", { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+                let log = "<h4>Combat terminé !</h4><ul>";
+                data.history.forEach(event => {
+                    log += `<li>${event}</li>`;
+                });
+                log += "</ul>";
+                document.getElementById("battleLog").innerHTML = log;
+                document.getElementById("pokedollar").textContent = data.currentPokedollar;
+            })
+            .catch(err => alert(err.message))
+            .finally(() => {
+                fightBtn.disabled = false;
+                fightBtn.textContent = "Combat Pokémon";
+            });
     });
 </script>
 }
