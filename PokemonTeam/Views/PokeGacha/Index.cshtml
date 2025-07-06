@@ -9,7 +9,7 @@ ViewData["Title"] = "PokeGacha";
         <h2>Gotta Catch Them All!</h2>
         <div style="margin-bottom:10px;">
             <strong>Pokédollars : <span id="pokedollar">-</span></strong><br/>
-            <small>Prix du pull : 10 pokédollars</small>
+            <small>Pull price : 10 pokédollars</small>
         </div>
         <button id="draw" style="border:none; background:none;">
             <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" />
@@ -25,7 +25,7 @@ ViewData["Title"] = "PokeGacha";
             <h3>Pokédex</h3>
             <div id="pokedexLoading" style="text-align:center;">
                 <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" style="width:60px;"/>
-                <p>Chargement du Pokédex...</p>
+                <p>Pokédex is loading...</p>
             </div>
             <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
                 <!-- sprites -->
@@ -34,12 +34,13 @@ ViewData["Title"] = "PokeGacha";
 
         <!-- module de combat -->
         <div id="future" style="flex: 1; padding: 1rem;">
-            <h3>Module de combat</h3>
+            <h3>Fighting ring</h3>
+            <p>You can fight to try to win 5 pokédollars, but if you lose, you have 10% chance to lose your pokémon too.</p>
             <div id="battleField" style="position:relative; height:150px; border:1px solid #ccc; margin-bottom:10px; overflow:hidden;">
                 <img id="playerSprite" src="" style="position:absolute; bottom:0; left:10px; transform:scaleX(-1); width:80px;" />
                 <img id="enemySprite" src="" style="position:absolute; bottom:0; right:10px; width:80px;" />
             </div>
-            <button id="fightBtn" style="font-weight:bold;">Combat Pokémon</button>
+            <button id="fightBtn" style="font-weight:bold;">FIGHT !</button>
             <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
         </div>
     </div>
@@ -110,7 +111,7 @@ ViewData["Title"] = "PokeGacha";
                 return fetch("/PokeGacha/CapturedByMe");
             })
             .then(res => {
-                if (!res.ok) throw new Error("Impossible de charger le pokedex");
+                if (!res.ok) throw new Error("Cannot load the pokédex.");
                 return res.json();
             })
             .then(ids => {
@@ -119,7 +120,7 @@ ViewData["Title"] = "PokeGacha";
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById("pokedexLoading").innerHTML = `<p style="color:red">Erreur de chargement du Pokédex</p>`;
+                document.getElementById("pokedexLoading").innerHTML = `<p style="color:red">Error while loading Pokédex</p>`;
             });
     });
 
@@ -129,7 +130,7 @@ ViewData["Title"] = "PokeGacha";
 
     drawButton.addEventListener("click", () => {
         if (currentPokedollar < 10) {
-            alert("Vous n'avez pas assez de pokédollars !");
+            alert("Not enough pokédollars !");
             return;
         }
 
@@ -137,7 +138,7 @@ ViewData["Title"] = "PokeGacha";
 
         fetch(`/PokeGacha/Pull`, { method: "POST" })
             .then(res => {
-                if (!res.ok) throw new Error("Pas assez de pokédollars !");
+                if (!res.ok) throw new Error("Not enough pokédollars !");
                 return res.json();
             })
             .then(data => {
@@ -173,7 +174,7 @@ ViewData["Title"] = "PokeGacha";
                             renderPokedex();
                         }
                     })
-                    .catch(err => console.error("Erreur association joueur/pokemon:", err));
+                    .catch(err => console.error("Error association player/pokemon:", err));
             })
             .catch(err => alert(err.message))
             .finally(() => loading.style.display = "none");
@@ -189,7 +190,7 @@ ViewData["Title"] = "PokeGacha";
         fightSound.currentTime = 0;
         fightSound.play();
         fightBtn.disabled = true;
-        fightBtn.textContent = "Combat en cours...";
+        fightBtn.textContent = "Ongoing fight...";
         document.getElementById("battleLog").innerHTML = "";
 
         fetch("/PokeGacha/StartBattle", { method: "POST" })
@@ -206,13 +207,13 @@ ViewData["Title"] = "PokeGacha";
                     if (i >= data.history.length) {
                         clearInterval(interval);
                         fightBtn.disabled = false;
-                        fightBtn.textContent = "Combat Pokémon";
+                        fightBtn.textContent = "Fight !";
                         document.getElementById("pokedollar").textContent = data.currentPokedollar;
                         currentPokedollar = data.currentPokedollar;
                         const lastLine = data.history[data.history.length - 1];
                         fightSound.pause();
                         fightSound.currentTime = 0;
-                        if (lastLine.includes("a gagné") && lastLine.includes("style='color:green'")) {
+                        if (lastLine.includes("won") && lastLine.includes("style='color:green'")) {
                             victorySound.play();
                         }
                         
@@ -225,7 +226,7 @@ ViewData["Title"] = "PokeGacha";
                     logElement.scrollTop = logElement.scrollHeight;
 
                     const playerStarts = data.playerStarts;
-                    if (i > 0 && !line.innerHTML.includes("a gagné")) {
+                    if (i > 0 && !line.innerHTML.includes("won")) {
                         if ((i % 2 === 1 && playerStarts) || (i % 2 === 0 && !playerStarts)) {
                             const sprite = document.getElementById("playerSprite");
                             sprite.style.animation = "chargeReverse 0.5s forwards";
