@@ -40,25 +40,26 @@ ALTER TABLE pokemon
 ADD CONSTRAINT fk_evolution FOREIGN KEY(fk_evolution) REFERENCES pokemon(id) ON DELETE NO ACTION;
 GO
 CREATE TABLE type (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    typeName VARCHAR(10) NOT NULL UNIQUE,
-    fire DECIMAL(3,2) DEFAULT 1.00,
-    water DECIMAL(3,2) DEFAULT 1.00,
-    grass DECIMAL(3,2) DEFAULT 1.00,
-    electric DECIMAL(3,2) DEFAULT 1.00,
-    ice DECIMAL(3,2) DEFAULT 1.00,
-    fighting DECIMAL(3,2) DEFAULT 1.00,
-    poison DECIMAL(3,2) DEFAULT 1.00,
-    ground DECIMAL(3,2) DEFAULT 1.00,
-    flying DECIMAL(3,2) DEFAULT 1.00,
-    psychic DECIMAL(3,2) DEFAULT 1.00,
-    bug DECIMAL(3,2) DEFAULT 1.00,
-    rock DECIMAL(3,2) DEFAULT 1.00,
-    ghost DECIMAL(3,2) DEFAULT 1.00,
-    dragon DECIMAL(3,2) DEFAULT 1.00,
-    dark DECIMAL(3,2) DEFAULT 1.00,
-    steel DECIMAL(3,2) DEFAULT 1.00,
-    fairy DECIMAL(3,2) DEFAULT 1.00
+                      id INT IDENTITY(1,1) PRIMARY KEY,
+                      typeName VARCHAR(10) NOT NULL UNIQUE,
+                      normal DECIMAL(3,2) DEFAULT 1.00,
+                      fire DECIMAL(3,2) DEFAULT 1.00,
+                      water DECIMAL(3,2) DEFAULT 1.00,
+                      grass DECIMAL(3,2) DEFAULT 1.00,
+                      electric DECIMAL(3,2) DEFAULT 1.00,
+                      ice DECIMAL(3,2) DEFAULT 1.00,
+                      fighting DECIMAL(3,2) DEFAULT 1.00,
+                      poison DECIMAL(3,2) DEFAULT 1.00,
+                      ground DECIMAL(3,2) DEFAULT 1.00,
+                      flying DECIMAL(3,2) DEFAULT 1.00,
+                      psychic DECIMAL(3,2) DEFAULT 1.00,
+                      bug DECIMAL(3,2) DEFAULT 1.00,
+                      rock DECIMAL(3,2) DEFAULT 1.00,
+                      ghost DECIMAL(3,2) DEFAULT 1.00,
+                      dragon DECIMAL(3,2) DEFAULT 1.00,
+                      dark DECIMAL(3,2) DEFAULT 1.00,
+                      steel DECIMAL(3,2) DEFAULT 1.00,
+                      fairy DECIMAL(3,2) DEFAULT 1.00
 );
 GO
 CREATE TABLE skill (
