@@ -1,8 +1,5 @@
-// game.js
-
 console.log("game.js chargé ✔️");
 
-// Récupère les paths de la piste
 const paths = [
     document.getElementById('trackPath1'),
     document.getElementById('trackPath2'),
@@ -30,12 +27,12 @@ document.getElementById('startRace').addEventListener('click', async () => {
         return;
     }
 
-    // Nettoyer l'ancienne course
-    track.querySelectorAll('.runner').forEach(img => img.remove());
+    // Nettoyer runners et previews
+    track.querySelectorAll('.runner, .preview-runner').forEach(img => img.remove());
 
     const runners = [];
 
-    // Charger les sprites des coureurs sélectionnés
+    // Placer les vrais coureurs
     for (let i = 0; i < selectedRunners.length; i++) {
         const pokeName = selectedRunners[i];
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeName}`);
@@ -46,6 +43,13 @@ document.getElementById('startRace').addEventListener('click', async () => {
         const img = document.createElement('img');
         img.src = spriteUrl;
         img.className = 'runner';
+
+        if (pokeName.toLowerCase() === selectedPokemon.toLowerCase()) {
+            if (window.activeBoost && window.activeBoost > 0) {
+                img.classList.add('boosted-runner');
+            }
+        }
+
         track.appendChild(img);
 
         runners.push({ img: img, front: spriteFront, name: pokeName });
@@ -63,7 +67,19 @@ document.getElementById('startRace').addEventListener('click', async () => {
         for (let i = 0; i < runners.length; i++) {
             if (steps[i] >= totalLengths[i]) continue;
 
-            steps[i] += 8;
+            // Vitesse de base
+            let baseSpeed = 8;
+
+            // Ajoute un facteur random à CHAQUE STEP
+            let randomFactor = Math.random() * 6;
+            let speed = baseSpeed + randomFactor;
+
+            // Ajoute boost si c'est le Pokémon sélectionné
+            if (runners[i].name.toLowerCase() === selectedPokemon.toLowerCase()) {
+                speed += window.activeBoost || 0;
+            }
+
+            steps[i] += speed;
 
             const point = paths[i].getPointAtLength(steps[i]);
             runners[i].img.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
@@ -111,6 +127,18 @@ document.getElementById('startRace').addEventListener('click', async () => {
                 : `Dommage, tu perds ton pari.`;
 
             document.getElementById('victoryPopup').style.display = 'block';
+
+            window.activeBoost = 0;
+
+            const boostInfo = document.getElementById('boost-info');
+            if (boostInfo) {
+                boostInfo.style.display = 'none';
+            }
+
+            // Clean tout puis reconstruire
+            track.querySelectorAll('.runner, .preview-runner').forEach(img => img.remove());
+            PreviewUtils.buildPreviewRunners(selectedRunners);
         }
     }, 50);
+
 });

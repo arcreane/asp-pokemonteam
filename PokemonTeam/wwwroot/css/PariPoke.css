@@ -166,3 +166,12 @@
 #confirmBet {
     white-space: nowrap; /* empêche le texte de passer à la ligne */
 }
+
+.boosted-runner {
+    filter: drop-shadow(0 0 10px gold);
+}
+
+.preview-runner {
+    opacity: 0.7;
+    pointer-events: none;
+}

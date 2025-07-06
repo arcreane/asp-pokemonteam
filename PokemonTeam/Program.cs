@@ -66,11 +66,11 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
     var context = services.GetRequiredService<PokemonDbContext>();
-    DbInitializer.Initialize(context);
-}
+    var passwordHasher = services.GetRequiredService<IPasswordHasher<UserAuthModel>>();
 
+    DbInitializer.Initialize(context, passwordHasher);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
