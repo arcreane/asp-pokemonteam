@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 using PokemonTeam.Exceptions;
@@ -61,6 +62,37 @@ public class PokemonController : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+    
+    [HttpPost("addPokemonToPlayer")]
+    [Authorize]
+    public async Task<IActionResult> AddPokemonToPlayer([FromBody] AddPokemonToPlayerRequest request)
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        var player = await _ctx.Players
+            .Include(p => p.Pokemons)
+            .Include(p => p.UserAuth)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+        if (player == null)
+            return NotFound("Joueur introuvable.");
+
+        var pokemon = await _ctx.Pokemons.FindAsync(request.PokemonId);
+        if (pokemon == null)
+            return NotFound("Pokémon introuvable.");
+
+        player.Pokemons.Add(pokemon); // many-to-many relation
+        await _ctx.SaveChangesAsync();
+
+        return Ok(new { message = "Pokémon ajouté au joueur." });
+    }
+
+    public class AddPokemonToPlayerRequest
+    {
+        public int PokemonId { get; set; }
+        public string Game { get; set; } = string.Empty;
+    }
+
 
     /// <summary>
     /// This method retrieves a Pokémon by its ID.

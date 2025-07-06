@@ -3,10 +3,14 @@
 }
 
 <div style="display: flex; height: 100vh;">
-    <!-- Partie gauche : le gacha -->
+    <!-- gauche -->
     <div style="flex: 2; padding: 1rem; border-right: 2px solid #ddd;">
         <h1>POKEGACHA</h1>
         <h2>Gotta Catch Them All!</h2>
+        <div style="margin-bottom:10px;">
+            <strong>Pokédollars : <span id="pokedollar">-</span></strong><br/>
+            <small>Prix du pull : 10 pokédollars</small>
+        </div>
         <button id="draw" style="border:none; background:none;">
             <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif"
                  alt="Pokeball" width="80" />
@@ -15,13 +19,11 @@
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- Partie droite : historique + zone future -->
+    <!-- droite -->
     <div style="flex: 1; display: flex; flex-direction: column;">
-        <!-- Haut : liste des pulls -->
         <div id="history" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
             <h3>Historique</h3>
         </div>
-        <!-- Bas : vide pour futur contenu -->
         <div id="future" style="flex: 1; padding: 1rem;">
             <h3>À venir</h3>
         </div>
@@ -32,18 +34,56 @@
 
 @section Scripts {
 <script>
+    const game = "pokeGacha";
+    let currentPokedollar = 0;
+
+    // au chargement
+    window.addEventListener("load", () => {
+        fetch(`/api/player/me?game=${game}`)
+            .then(res => {
+                if (res.status === 404) {
+                    // pas de joueur → on le crée
+                    return fetch("/api/player/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            name: `${game}-player`,
+                            game: game
+                        })
+                    }).then(r => r.json());
+                } else {
+                    return res.json();
+                }
+            })
+            .then(player => {
+                document.getElementById("pokedollar").textContent = player.pokedollar;
+                currentPokedollar = player.pokedollar;
+            })
+            .catch(err => console.error(err));
+    });
+
     const drawButton = document.getElementById("draw");
     const loading = document.getElementById("loading");
     const sound = document.getElementById("gachaSound");
 
     drawButton.addEventListener("click", () => {
-        const id = Math.floor(Math.random() * 151) + 1;
+        if (currentPokedollar < 10) {
+            alert("Vous n'avez pas assez de pokédollars !");
+            return;
+        }
+
         loading.style.display = "block";
-        fetch(`/Pokemon/getPokemonById/${id}`)
-            .then(res => res.json())
-            .then(pokemon => {
+
+        fetch(`/PokeGacha/Pull`, { method: "POST" })
+            .then(res => {
+                if (!res.ok) throw new Error("Pas assez de pokédollars !");
+                return res.json();
+            })
+            .then(data => {
                 sound.play();
-                const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+                const pokemon = data.pokemon;
+                const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
+
                 document.getElementById("result").innerHTML = `
                     <div style="border:1px solid #ccc; padding:1rem; border-radius:8px;">
                         <h3>${pokemon.name}</h3>
@@ -57,7 +97,22 @@
                 document.getElementById("history").innerHTML += `
                     <img src="${spriteUrl}" alt="${pokemon.name}" width="40" style="margin:2px;" />
                 `;
+
+                currentPokedollar = data.pokedollar;
+                document.getElementById("pokedollar").textContent = data.pokedollar;
+
+                // ajout du pokémon au joueur
+                fetch("/Pokemon/addPokemonToPlayer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        pokemonId: pokemon.id,
+                        game: game
+                    })
+                })
+                .catch(err => console.error("Erreur association joueur/pokemon:", err));
             })
+            .catch(err => alert(err.message))
             .finally(() => loading.style.display = "none");
     });
 </script>
