@@ -156,6 +156,8 @@ public class PokeGachaController : Controller
         playerPokemon.healthPoint = playerPokemon.maxHealthPoint;
         enemyPokemon.healthPoint = enemyPokemon.maxHealthPoint;
 
+        tackleSkill.PowerPoints = 35;
+
         await _ctx.SaveChangesAsync();
 
         return Ok(new
@@ -168,6 +170,7 @@ public class PokeGachaController : Controller
             playerStarts = playerPokemon.speed >= enemyPokemon.speed,
             currentPokedollar = player.Pokedollar
         });
+
 
     }
 
