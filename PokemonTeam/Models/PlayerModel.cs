@@ -11,7 +11,7 @@ public class Player
     public int fk_user_auth { get; set; }
     public UserAuthModel? UserAuth { get; set; }
 
-    // public ICollection<Pokemon> Pokemons { get; set; } = new List<Pokemon>();
+    public List<Pokemon> Pokemons { get; set; } = new();
     public ICollection<Item> Items { get; set; } = new List<Item>();
 
 }

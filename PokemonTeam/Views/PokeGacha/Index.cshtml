@@ -1,26 +1,119 @@
 @{
-ViewData["Title"] = "PokeGacha";
+    ViewData["Title"] = "PokeGacha";
 }
 
-<h2>Tirer un Pokémon !</h2>
-<button id="draw">Tirer</button>
-<div id="result"></div>
+<div style="display: flex; height: 100vh;">
+    <!-- gauche -->
+    <div style="flex: 2; padding: 1rem; border-right: 2px solid #ddd;">
+        <h1>POKEGACHA</h1>
+        <h2>Gotta Catch Them All!</h2>
+        <div style="margin-bottom:10px;">
+            <strong>Pokédollars : <span id="pokedollar">-</span></strong><br/>
+            <small>Prix du pull : 10 pokédollars</small>
+        </div>
+        <button id="draw" style="border:none; background:none;">
+            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif"
+                 alt="Pokeball" width="80" />
+        </button>
+        <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- droite -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
+        <div id="history" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
+            <h3>Historique</h3>
+        </div>
+        <div id="future" style="flex: 1; padding: 1rem;">
+            <h3>À venir</h3>
+        </div>
+    </div>
+</div>
+
+<audio id="gachaSound" src="https://vgmsite.com/soundtracks/pokemon-red-blue-yellow-gameboy-soundtrack/ljmxehvo/112%20-%20Caught%20Pokemon.mp3"></audio>
 
 @section Scripts {
 <script>
-    document.getElementById("draw").addEventListener("click", () => {
-        const id = Math.floor(Math.random() * 151) + 1;
-        fetch(`/Pokemon/getPokemonById/${id}`)
-            .then(res => res.json())
-            .then(pokemon => {
+    const game = "pokeGacha";
+    let currentPokedollar = 0;
+
+    // au chargement
+    window.addEventListener("load", () => {
+        fetch(`/api/player/me?game=${game}`)
+            .then(res => {
+                if (res.status === 404) {
+                    // pas de joueur → on le crée
+                    return fetch("/api/player/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            name: `${game}-player`,
+                            game: game
+                        })
+                    }).then(r => r.json());
+                } else {
+                    return res.json();
+                }
+            })
+            .then(player => {
+                document.getElementById("pokedollar").textContent = player.pokedollar;
+                currentPokedollar = player.pokedollar;
+            })
+            .catch(err => console.error(err));
+    });
+
+    const drawButton = document.getElementById("draw");
+    const loading = document.getElementById("loading");
+    const sound = document.getElementById("gachaSound");
+
+    drawButton.addEventListener("click", () => {
+        if (currentPokedollar < 10) {
+            alert("Vous n'avez pas assez de pokédollars !");
+            return;
+        }
+
+        loading.style.display = "block";
+
+        fetch(`/PokeGacha/Pull`, { method: "POST" })
+            .then(res => {
+                if (!res.ok) throw new Error("Pas assez de pokédollars !");
+                return res.json();
+            })
+            .then(data => {
+                sound.play();
+                const pokemon = data.pokemon;
+                const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
+
                 document.getElementById("result").innerHTML = `
+                    <div style="border:1px solid #ccc; padding:1rem; border-radius:8px;">
                         <h3>${pokemon.name}</h3>
+                        <img src="${spriteUrl}" alt="${pokemon.name}" />
                         <p>HP: ${pokemon.healthPoint}</p>
-                        <p>Attaque: ${pokemon.strength}</p>
-                        <p>Défense: ${pokemon.defense}</p>
-                        <p>Vitesse: ${pokemon.speed}</p>
-                    `;
-            });
+                        <p>ATK: ${pokemon.strength}</p>
+                        <p>DEF: ${pokemon.defense}</p>
+                        <p>SPD: ${pokemon.speed}</p>
+                    </div>
+                `;
+                document.getElementById("history").innerHTML += `
+                    <img src="${spriteUrl}" alt="${pokemon.name}" width="40" style="margin:2px;" />
+                `;
+
+                currentPokedollar = data.pokedollar;
+                document.getElementById("pokedollar").textContent = data.pokedollar;
+
+                // ajout du pokémon au joueur
+                fetch("/Pokemon/addPokemonToPlayer", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        pokemonId: pokemon.id,
+                        game: game
+                    })
+                })
+                .catch(err => console.error("Erreur association joueur/pokemon:", err));
+            })
+            .catch(err => alert(err.message))
+            .finally(() => loading.style.display = "none");
     });
 </script>
 }
