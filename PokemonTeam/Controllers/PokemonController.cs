@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
+using PokemonTeam.Services;
 
 namespace PokemonTeam.Controllers;
 
@@ -35,33 +36,16 @@ public class PokemonController : ControllerBase
     {
         try
         {
-            Skill skill = request.Skill;
-            Pokemon attacker = request.Attacker;
-            Pokemon target = request.Target;
-
-            if (skill.PowerPoints > 0)
-            {
-                skill.PowerPoints--;
-
-                double typeMultiplier = await TypeChart.GetDamageMultiplierAsync(_ctx, skill.Type, target.types.ToArray());
-                double damage = (skill.Damage * (attacker.strength / (double)target.defense)) * typeMultiplier;
-                int finalDamage = Math.Max(1, (int)damage);
-
-                target.healthPoint -= (short)finalDamage;
-
-                var response = new UseSkillResponse(finalDamage, target);
-                return Ok(response);
-            }
-            else
-            {
-                throw new NotEnoughPowerPointsException("Not enough power points to use this skill.");
-            }
+            var battleService = new BattleService(_ctx);
+            var response = await battleService.UseSkill(request.Skill, request.Attacker, request.Target);
+            return Ok(response);
         }
         catch (NotEnoughPowerPointsException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
     }
+
     
     [HttpPost("addPokemonToPlayer")]
     [Authorize]

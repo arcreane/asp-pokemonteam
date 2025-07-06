@@ -9,12 +9,10 @@ using PokemonTeam.Services;
 public class PokeGachaController : Controller
 {
     private readonly PokemonDbContext _ctx;
-    private readonly ITypeChartService _typeChartService;
 
-    public PokeGachaController(PokemonDbContext ctx, ITypeChartService typeChartService)
+    public PokeGachaController(PokemonDbContext ctx)
     {
         _ctx = ctx;
-        _typeChartService = typeChartService;
     }
 
     public IActionResult Index()
@@ -25,28 +23,29 @@ public class PokeGachaController : Controller
     [HttpPost]
     public async Task<IActionResult> Pull()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userIdClaim))
-            return Unauthorized();
-
-        if (!int.TryParse(userIdClaim, out var userId))
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        if (string.IsNullOrEmpty(email))
             return Unauthorized();
 
         var player = await _ctx.Players
-            .FirstOrDefaultAsync(p => p.fk_user_auth == userId && p.Game == "pokeGacha");
+            .Include(p => p.Pokemons)
+            .Include(p => p.UserAuth)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
 
         if (player == null)
-            return BadRequest(new { error = "Joueur introuvable." });
+            return BadRequest("Joueur introuvable.");
 
         if (player.Pokedollar < 10)
             return BadRequest(new { error = "Pas assez de pokédollars." });
-
-        player.Pokedollar -= 10;
 
         var random = new Random();
         var pokemonId = random.Next(1, 152);
         var pokemon = await _ctx.Pokemons.FindAsync(pokemonId);
 
+        if (pokemon == null)
+            return NotFound("Pokémon non trouvé.");
+
+        player.Pokedollar -= 10;
         await _ctx.SaveChangesAsync();
 
         return Ok(new
@@ -63,6 +62,7 @@ public class PokeGachaController : Controller
 
         var player = await _ctx.Players
             .Include(p => p.Pokemons)
+            .ThenInclude(p => p.Types)
             .Include(p => p.UserAuth)
             .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
 
@@ -70,7 +70,6 @@ public class PokeGachaController : Controller
             return Json(new List<int>());
 
         var capturedIds = player.Pokemons.Select(p => p.Id).ToList();
-
         return Json(capturedIds);
     }
 
@@ -83,34 +82,35 @@ public class PokeGachaController : Controller
 
         var player = await _ctx.Players
             .Include(p => p.Pokemons)
+                .ThenInclude(p => p.Types)
             .Include(p => p.UserAuth)
             .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
 
-        if (player == null || player.Pokemons.Count == 0)
-            return BadRequest("Aucun Pokémon pour combattre.");
+        if (player == null || !player.Pokemons.Any())
+            return BadRequest("Aucun Pokémon disponible pour le combat.");
 
         var playerPokemon = player.Pokemons.OrderBy(x => Guid.NewGuid()).First();
 
         var randomEnemyId = new Random().Next(1, 152);
-        var enemyPokemon = await _ctx.Pokemons.FindAsync(randomEnemyId);
+        var enemyPokemon = await _ctx.Pokemons
+            .Include(p => p.Types)
+            .FirstOrDefaultAsync(p => p.Id == randomEnemyId);
 
         if (enemyPokemon == null)
             return NotFound("Aucun Pokémon ennemi trouvé.");
-
-        var playerInitialHp = playerPokemon.healthPoint;
-        var enemyInitialHp = enemyPokemon.healthPoint;
 
         var tackleSkill = await _ctx.Skills
             .Include(s => s.TypeChart)
             .FirstOrDefaultAsync(s => s.Id == 1);
 
         if (tackleSkill == null)
-            return NotFound("Skill Tackle introuvable");
-
-        if (tackleSkill.TypeChart == null)
-            return BadRequest("Le skill Tackle n'a pas de type associé en base.");
+            return NotFound("Skill Tackle introuvable.");
 
         var history = new List<string>();
+
+        history.Add($"<span style='color:green'>Ton {playerPokemon.name}</span> entre en combat contre <span style='color:red'>{enemyPokemon.name}</span> !");
+
+        var battleService = new BattleService(_ctx);
         var playerTurn = playerPokemon.speed >= enemyPokemon.speed;
         var finished = false;
 
@@ -118,45 +118,33 @@ public class PokeGachaController : Controller
         {
             if (playerTurn)
             {
-                var req = new UseSkillRequest
-                {
-                    Attacker = playerPokemon,
-                    Target = enemyPokemon,
-                    Skill = tackleSkill
-                };
+                var result = await battleService.UseSkill(tackleSkill, playerPokemon, enemyPokemon);
 
-                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _ctx);
-                history.Add($"{playerPokemon.name} utilise Tackle et inflige {result.DamageDealt} dégâts (ennemi reste {enemyPokemon.healthPoint} HP)");
+                history.Add($"<span style='color:green'>{playerPokemon.name}</span> attaque, <span style='color:red'>{enemyPokemon.name}</span> perd {result.DamageDealt} HP (PV restants {enemyPokemon.healthPoint})");
 
                 if (enemyPokemon.healthPoint <= 0)
                 {
-                    finished = true;
-                    history.Add("Le joueur a gagné !");
+                    history.Add($"<span style='color:green'>{playerPokemon.name}</span> a gagné !");
                     player.Pokedollar += 5;
+                    finished = true;
                     break;
                 }
             }
             else
             {
-                var req = new UseSkillRequest
-                {
-                    Attacker = enemyPokemon,
-                    Target = playerPokemon,
-                    Skill = tackleSkill
-                };
+                var result = await battleService.UseSkill(tackleSkill, enemyPokemon, playerPokemon);
 
-                var result = await tackleSkill.UseInBattle(req.Attacker, req.Target, _ctx);
-                history.Add($"L'ennemi utilise Tackle et inflige {result.DamageDealt} dégâts (joueur reste {playerPokemon.healthPoint} HP)");
+                history.Add($"<span style='color:red'>{enemyPokemon.name}</span> attaque, <span style='color:green'>{playerPokemon.name}</span> perd {result.DamageDealt} HP (PV restants {playerPokemon.healthPoint})");
 
                 if (playerPokemon.healthPoint <= 0)
                 {
-                    finished = true;
-                    history.Add("L'ennemi a gagné !");
-                    if (new Random().NextDouble() < 0.5)
+                    history.Add($"<span style='color:red'>{enemyPokemon.name}</span> a gagné !");
+                    if (new Random().NextDouble() < 0.1)
                     {
                         player.Pokemons.Remove(playerPokemon);
-                        history.Add($"{playerPokemon.name} s'est enfui de honte !");
+                        history.Add($"{playerPokemon.name} s'est enfui de peur !");
                     }
+                    finished = true;
                     break;
                 }
             }
@@ -178,4 +166,6 @@ public class PokeGachaController : Controller
             currentPokedollar = player.Pokedollar
         });
     }
+
 }
+    

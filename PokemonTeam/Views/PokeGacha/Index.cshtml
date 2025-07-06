@@ -76,6 +76,8 @@ ViewData["Title"] = "PokeGacha";
                             game: game
                         })
                     }).then(r => r.json());
+                } else if (!res.ok) {
+                    throw new Error("Erreur lors de la récupération du joueur");
                 } else {
                     return res.json();
                 }
@@ -86,13 +88,20 @@ ViewData["Title"] = "PokeGacha";
 
                 return fetch("/PokeGacha/CapturedByMe");
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Impossible de charger le pokedex");
+                return res.json();
+            })
             .then(ids => {
                 capturedPokemonIds = ids;
                 renderPokedex();
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                document.getElementById("pokedexLoading").innerHTML = `<p style="color:red">Erreur de chargement du Pokédex</p>`;
+            });
     });
+
 
     const drawButton = document.getElementById("draw");
     const loading = document.getElementById("loading");
@@ -160,18 +169,27 @@ ViewData["Title"] = "PokeGacha";
         fetch("/PokeGacha/StartBattle", { method: "POST" })
             .then(res => res.json())
             .then(data => {
-                let log = "<h4>Combat terminé !</h4><ul>";
-                data.history.forEach(event => {
-                    log += `<li>${event}</li>`;
-                });
-                log += "</ul>";
-                document.getElementById("battleLog").innerHTML = log;
-                document.getElementById("pokedollar").textContent = data.currentPokedollar;
+                const logElement = document.getElementById("battleLog");
+                let i = 0;
+
+                const interval = setInterval(() => {
+                    if (i >= data.history.length) {
+                        clearInterval(interval);
+                        fightBtn.disabled = false;
+                        fightBtn.textContent = "Combat Pokémon";
+                        document.getElementById("pokedollar").textContent = data.currentPokedollar;
+                        return;
+                    }
+                    const line = document.createElement("div");
+                    line.innerHTML = data.history[i];
+                    logElement.appendChild(line);
+                    logElement.scrollTop = logElement.scrollHeight;
+                    i++;
+                }, 1000);
             })
             .catch(err => alert(err.message))
             .finally(() => {
-                fightBtn.disabled = false;
-                fightBtn.textContent = "Combat Pokémon";
+                //
             });
     });
 </script>

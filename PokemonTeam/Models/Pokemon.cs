@@ -52,9 +52,7 @@ public class Pokemon
 
     [Column("name")]
     public string name { get; private set; }
-
-    [NotMapped]
-    public List<string> types { get; private set; } = new();
+    
 
     [Column("health_point")]
     public short healthPoint { get; set; }
@@ -77,6 +75,8 @@ public class Pokemon
     // relations
     [NotMapped]
     public List<Skill>? skills { get; set; }
+    
+    public List<TypeChart> Types { get; set; } = new();
 
     [NotMapped]
     public Pokemon? evolveTo { get; set; }
@@ -85,7 +85,6 @@ public class Pokemon
     public Pokemon() { }
     
     public Pokemon(string name, 
-        List<String> types, 
         byte healthPoint, 
         byte maxHealthPoint, 
         byte defense, 
@@ -93,10 +92,10 @@ public class Pokemon
         byte speed, 
         int unlockedXp, 
         List<Skill> skills, 
+        List<TypeChart> Types,
         Pokemon evolveTo = null)
     {
         this.name = name;
-        this.types = types;
         this.healthPoint = healthPoint;
         this.maxHealthPoint = maxHealthPoint;
         this.defense = defense;
@@ -104,6 +103,7 @@ public class Pokemon
         this.speed = speed;
         this.unlockedXp = unlockedXp;
         this.skills = skills;
+        this.Types = Types;
         this.evolveTo = evolveTo;
     }
 }

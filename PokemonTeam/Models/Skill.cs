@@ -274,36 +274,37 @@ namespace PokemonTeam.Models
                 throw new ArgumentNullException(nameof(target), "La cible ne peut pas être nulle.");
 
             if (ctx == null)
-                throw new ArgumentNullException(nameof(ctx), "Le contexte de base de données ne peut pas être nul.");
+                throw new ArgumentNullException(nameof(ctx), "Le contexte est nul.");
 
-            // Consommer un PP
+            // Consomme PP
             this.Use();
 
-            // Vérifier la précision
+            // Vérifier précision
             if (!this.HitsTarget())
             {
-                // raté
                 return new UseSkillResponse(0, target);
             }
 
-            // type de l'attaque
+            // type attaque
             string skillType = this.Type;
 
-            // récupérer le multiplicateur depuis TypeChart
-            decimal typeMultiplier = (decimal)await TypeChart.GetDamageMultiplierAsync(
-                ctx,
-                skillType,
-                target.types.ToArray()
-            );
+            decimal typeMultiplier = 1.0m;
 
-            // calcul des dégâts
+            if (target.Types != null && target.Types.Any())
+            {
+                typeMultiplier = (decimal)await TypeChart.GetDamageMultiplierAsync(
+                    ctx,
+                    skillType,
+                    target.Types.Select(t => t.typeName).ToArray()
+                );
+            }
+
             int damageDealt = this.CalculateDamage(
                 attacker.strength,
                 target.defense,
                 typeMultiplier
             );
 
-            // appliquer les dégâts
             target.healthPoint = (short)Math.Max(0, target.healthPoint - damageDealt);
 
             return new UseSkillResponse(damageDealt, target);
