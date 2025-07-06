@@ -54,4 +54,23 @@ public class PokeGachaController : Controller
             pokemon
         });
     }
+    
+    [HttpGet]
+    public async Task<JsonResult> CapturedByMe()
+    {
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+        var player = await _ctx.Players
+            .Include(p => p.Pokemons)
+            .Include(p => p.UserAuth)
+            .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
+
+        if (player == null)
+            return Json(new List<int>());
+
+        var capturedIds = player.Pokemons.Select(p => p.Id).ToList();
+
+        return Json(capturedIds);
+    }
+
 }

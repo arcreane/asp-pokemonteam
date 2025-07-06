@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "PokeGacha";
+ViewData["Title"] = "PokeGacha";
 }
 
 <div style="display: flex; height: 100vh;">
@@ -19,10 +19,17 @@
         <div id="result" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- droite -->
+    <!-- droite = pokedex -->
     <div style="flex: 1; display: flex; flex-direction: column;">
-        <div id="history" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
-            <h3>Historique</h3>
+        <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
+            <h3>Pokédex</h3>
+            <div id="pokedexLoading" style="text-align:center;">
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" style="width:60px;"/>
+                <p>Chargement du Pokédex...</p>
+            </div>
+            <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
+                <!-- sprites seront injectés ici -->
+            </div>
         </div>
         <div id="future" style="flex: 1; padding: 1rem;">
             <h3>À venir</h3>
@@ -36,6 +43,24 @@
 <script>
     const game = "pokeGacha";
     let currentPokedollar = 0;
+    let capturedPokemonIds = [];
+
+    function renderPokedex() {
+        const container = document.getElementById("pokedexGrid");
+        container.innerHTML = "";
+        container.style.display = "grid"; // montrer la grille
+        document.getElementById("pokedexLoading").style.display = "none"; // cacher le spinner
+
+        for (let id = 1; id <= 151; id++) {
+            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+            const isCaptured = capturedPokemonIds.includes(id);
+            container.innerHTML += `
+                <img src="${spriteUrl}"
+                     style="width:50px; filter:${isCaptured ? 'none' : 'grayscale(100%)'};"
+                     alt="pokemon ${id}" />
+            `;
+        }
+    }
 
     // au chargement
     window.addEventListener("load", () => {
@@ -58,6 +83,14 @@
             .then(player => {
                 document.getElementById("pokedollar").textContent = player.pokedollar;
                 currentPokedollar = player.pokedollar;
+
+                // récupère les pokémons capturés
+                return fetch("/PokeGacha/CapturedByMe");
+            })
+            .then(res => res.json())
+            .then(ids => {
+                capturedPokemonIds = ids;
+                renderPokedex();
             })
             .catch(err => console.error(err));
     });
@@ -94,9 +127,6 @@
                         <p>SPD: ${pokemon.speed}</p>
                     </div>
                 `;
-                document.getElementById("history").innerHTML += `
-                    <img src="${spriteUrl}" alt="${pokemon.name}" width="40" style="margin:2px;" />
-                `;
 
                 currentPokedollar = data.pokedollar;
                 document.getElementById("pokedollar").textContent = data.pokedollar;
@@ -110,7 +140,13 @@
                         game: game
                     })
                 })
-                .catch(err => console.error("Erreur association joueur/pokemon:", err));
+                    .then(() => {
+                        if (!capturedPokemonIds.includes(pokemon.id)) {
+                            capturedPokemonIds.push(pokemon.id);
+                            renderPokedex();
+                        }
+                    })
+                    .catch(err => console.error("Erreur association joueur/pokemon:", err));
             })
             .catch(err => alert(err.message))
             .finally(() => loading.style.display = "none");
