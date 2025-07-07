@@ -23,35 +23,73 @@ builder.Configuration
 builder.Services.AddDbContext<PokemonDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// JWT Authentication
+// JWT Authentication - CONFIGURATION FINALE CORRIGÉE
+const string DEFAULT_JWT_KEY = "SuperSecretKeyForJWTTokenGeneration2025PokemonTeamApplicationVeryLongKeyForSecurity!";
+
 builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.Events = new JwtBearerEvents
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.Events = new JwtBearerEvents
+        OnMessageReceived = context =>
         {
-            OnMessageReceived = context =>
+            var token = context.Request.Cookies["access_token"];
+            if (!string.IsNullOrEmpty(token))
             {
-                context.Token = context.Request.Cookies["access_token"];
-                return Task.CompletedTask;
+                context.Token = token;
+                Console.WriteLine($"DEBUG Program: Token récupéré depuis cookie: {token.Substring(0, 20)}...");
             }
-        };
-        options.TokenValidationParameters = new TokenValidationParameters
+            else
+            {
+                Console.WriteLine("DEBUG Program: Aucun token trouvé dans les cookies");
+            }
+            return Task.CompletedTask;
+        },
+        OnAuthenticationFailed = context =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "SuperSecretKeyForJWTTokenGeneration2025PokemonTeamApplicationVeryLongKeyForSecurity!")
-        )
-        };
-    });
+            Console.WriteLine($"DEBUG Program: Échec authentification JWT: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("DEBUG Program: Token JWT validé avec succès");
+            return Task.CompletedTask;
+        }
+    };
+
+    // CORRECTION: Utiliser exactement la même clé
+    var jwtKey = builder.Configuration["Jwt:Key"];
+    if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
+    {
+        jwtKey = DEFAULT_JWT_KEY;
+    }
+
+    Console.WriteLine($"DEBUG Program: Utilisation de la clé (longueur {jwtKey.Length}): {jwtKey.Substring(0, 20)}...");
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "PokemonTeam",
+        ValidAudience = builder.Configuration["Jwt:Audience"] ?? "PokemonTeamUser",
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        ClockSkew = TimeSpan.Zero,
+        
+        // CORRECTION: Paramètres additionnels pour éviter les erreurs de validation
+        RequireExpirationTime = true,
+        RequireSignedTokens = true,
+        SaveSigninToken = false,
+        ValidateActor = false,
+        ValidateTokenReplay = false
+    };
+});
 
 builder.Services.AddAuthorization();
 

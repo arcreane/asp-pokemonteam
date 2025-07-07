@@ -9,6 +9,7 @@ namespace PokemonTeam.Services;
 public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
+    private const string DEFAULT_KEY = "SuperSecretKeyForJWTTokenGeneration2025PokemonTeamApplicationVeryLongKeyForSecurity!";
 
     public TokenService(IConfiguration configuration)
     {
@@ -19,16 +20,24 @@ public class TokenService : ITokenService
     {
         var claims = new[]
         {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Email, email),
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email)
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, 
+                new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), 
+                ClaimValueTypes.Integer64)
         };
 
-        // CORRECTION: S'assurer que la clé fait au moins 32 caractères (256 bits)
+        // CORRECTION: Utiliser exactement la même clé que dans Program.cs
         var jwtKey = _configuration["Jwt:Key"];
         if (string.IsNullOrEmpty(jwtKey) || jwtKey.Length < 32)
         {
-            jwtKey = "SuperSecretKeyForJWTTokenGeneration2025PokemonTeamApplicationVeryLongKeyForSecurityPurposes!@#$%";
+            jwtKey = DEFAULT_KEY;
         }
+
+        Console.WriteLine($"DEBUG TokenService: Utilisation de la clé (longueur {jwtKey.Length}): {jwtKey.Substring(0, 20)}...");
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -49,6 +58,9 @@ public class TokenService : ITokenService
             signingCredentials: creds
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        Console.WriteLine($"DEBUG TokenService: Token créé, expire le {expires}");
+        
+        return tokenString;
     }
 }

@@ -73,48 +73,57 @@ public class AuthController : Controller
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (!ModelState.IsValid)
-            return BadRequest("Requête invalide");
+            return BadRequest(new { message = "Requête invalide" });
 
         var user = await _context.UserAuths.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user == null)
         {
             Console.WriteLine($"DEBUG: Utilisateur non trouvé pour email: {request.Email}");
-            return Unauthorized("Email ou mot de passe incorrect");
+            return Unauthorized(new { message = "Email ou mot de passe incorrect" });
         }
 
         Console.WriteLine($"DEBUG: Utilisateur trouvé: {user.Email}");
-        Console.WriteLine($"DEBUG: Hash stocké: {user.Password}");
-        Console.WriteLine($"DEBUG: Mot de passe reçu: {request.Password}");
-
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, request.Password);
         Console.WriteLine($"DEBUG: Résultat vérification: {result}");
 
         if (result == PasswordVerificationResult.Failed)
         {
             Console.WriteLine("DEBUG: Échec de la vérification du mot de passe");
-            return Unauthorized("Email ou mot de passe incorrect");
+            return Unauthorized(new { message = "Email ou mot de passe incorrect" });
         }
 
         var token = _tokenService.CreateToken(user.Id, user.Email);
 
-        Response.Cookies.Append("access_token", token, new CookieOptions
+        // CORRECTION: Configuration cookie plus robuste
+        var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = false,
+            Secure = false, // false pour HTTP en développement
             SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddMinutes(60),
-            Path = "/"
-        });
+            Path = "/",
+            Domain = null // Laisser null pour localhost
+        };
 
+        Response.Cookies.Append("access_token", token, cookieOptions);
+
+        Console.WriteLine($"DEBUG: Cookie défini avec token: {token.Substring(0, 20)}...");
         Console.WriteLine("DEBUG: Connexion réussie, token créé");
-        return Ok(new { message = "Connexion réussie" });
+        
+        return Ok(new { message = "Connexion réussie", success = true });
     }
 
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("access_token");
-        return Ok(new { message = "Déconnexion réussie" });
+        // CORRECTION: Supprimer le cookie correctement
+        Response.Cookies.Delete("access_token", new CookieOptions
+        {
+            Path = "/",
+            Domain = null
+        });
+        
+        return Ok(new { message = "Déconnexion réussie", success = true });
     }
 
     [HttpGet("check")]

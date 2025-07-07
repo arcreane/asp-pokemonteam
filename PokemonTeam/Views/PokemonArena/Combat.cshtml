@@ -11,8 +11,8 @@
     <div class="row">
         <!-- Pokémon Joueur -->
         <div class="col-md-5">
-            <div class="pokemon-card">
-                <h4 id="player-pokemon-name">Pikachu</h4>
+            <div class="pokemon-card player">
+                <h4 id="player-pokemon-name">Chargement...</h4>
                 <img id="player-pokemon-sprite" src="" alt="Votre Pokémon" class="pokemon-sprite">
                 
                 <div class="health-bar">
@@ -20,6 +20,43 @@
                 </div>
                 <div class="text-center">
                     <span id="player-health-text">100/100 HP</span>
+                </div>
+                
+                <div class="mt-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <small>ATK: <span id="player-attack">???</span></small>
+                        </div>
+                        <div class="col-6">
+                            <small>DEF: <span id="player-defense">???</span></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Zone Combat -->
+        <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+            <div>
+                <i class="fas fa-lightning-bolt fa-3x text-warning pulse"></i>
+                <p class="mt-2">VS</p>
+                <button id="new-battle-btn" class="btn btn-light btn-sm">
+                    <i class="fas fa-redo"></i> Nouveau Combat
+                </button>
+            </div>
+        </div>
+        
+        <!-- Pokémon Ennemi -->
+        <div class="col-md-5">
+            <div class="pokemon-card enemy">
+                <h4 id="enemy-pokemon-name">???</h4>
+                <img id="enemy-pokemon-sprite" src="" alt="Pokémon Ennemi" class="pokemon-sprite">
+                
+                <div class="health-bar">
+                    <div id="enemy-health-fill" class="health-fill" style="width: 100%"></div>
+                </div>
+                <div class="text-center">
+                    <span id="enemy-health-text">???/??? HP</span>
                 </div>
                 
                 <div class="mt-3">
@@ -47,13 +84,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Attaques :</h6>
+                        <!-- Les boutons seront générés dynamiquement -->
                         <div id="skill-buttons">
-                            <button class="skill-button" data-skill="tackle" data-damage="40" data-type="normal">
-                                <i class="fas fa-fist-raised"></i> Charge (40 DMG)
-                            </button>
-                            <button class="skill-button" data-skill="thundershock" data-damage="40" data-type="electric">
-                                <i class="fas fa-bolt"></i> Éclair (40 DMG)
-                            </button>
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i> Chargement des attaques...
+                            </div>
                         </div>
                     </div>
                     
@@ -61,7 +96,7 @@
                         <h6>Objets :</h6>
                         <div id="item-buttons">
                             <button class="btn btn-success mb-2" onclick="usePotion()">
-                                <i class="fas fa-heart"></i> Potion (+50 HP)
+                                <i class="fas fa-heart"></i> Potion
                             </button>
                             <button class="btn btn-info mb-2" onclick="showItems()">
                                 <i class="fas fa-backpack"></i> Inventaire
@@ -105,40 +140,4 @@
             initializeCombat();
         });
     </script>
-}    <div class="row">
-                        <div class="col-6">
-                            <small>ATK: <span id="player-attack">55</span></small>
-                        </div>
-                        <div class="col-6">
-                            <small>DEF: <span id="player-defense">40</span></small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Zone Combat -->
-        <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
-            <div>
-                <i class="fas fa-lightning-bolt fa-3x text-warning pulse"></i>
-                <p class="mt-2">VS</p>
-                <button id="new-battle-btn" class="btn btn-light btn-sm">
-                    <i class="fas fa-redo"></i> Nouveau Combat
-                </button>
-            </div>
-        </div>
-        
-        <!-- Pokémon Ennemi -->
-        <div class="col-md-5">
-            <div class="pokemon-card">
-                <h4 id="enemy-pokemon-name">???</h4>
-                <img id="enemy-pokemon-sprite" src="" alt="Pokémon Ennemi" class="pokemon-sprite">
-                
-                <div class="health-bar">
-                    <div id="enemy-health-fill" class="health-fill" style="width: 100%"></div>
-                </div>
-                <div class="text-center">
-                    <span id="enemy-health-text">???/??? HP</span>
-                </div>
-                
-                <div class="mt-3">
+}

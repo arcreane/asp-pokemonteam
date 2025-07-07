@@ -144,6 +144,87 @@ public class PlayerController : Controller
         return Ok(new { message = $"Item '{item.Name}' utilisé et retiré de l'inventaire." });
     }
 
+
+    /// <summary>
+    /// Get player's main Pokémon for combat
+    /// </summary>
+    [HttpGet("my-pokemon")]
+    [Authorize]
+    public async Task<IActionResult> GetMyPokemon([FromQuery] string game)
+    {
+        try
+        {
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            var player = await _context.Players
+                .Include(p => p.UserAuth)
+                .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == game);
+
+            if (player == null) return NotFound(new { error = "Joueur non trouvé" });
+
+            // Pour l'instant, retourner Pikachu par défaut
+            // TODO: Implémenter un système de Pokémon possédés par le joueur
+            var pikachu = await _context.Database
+                .SqlQuery<Pokemon>($"SELECT * FROM pokemon WHERE id = 25")
+                .FirstOrDefaultAsync();
+
+            if (pikachu == null)
+            {
+                return NotFound(new { error = "Pokémon par défaut non trouvé" });
+            }
+
+            // Récupérer les types
+            var pokemonTypes = await _context.Database
+                .SqlQuery<string>($@"
+                    SELECT t.typeName 
+                    FROM pokemon_type pt 
+                    INNER JOIN type t ON pt.fk_type = t.id 
+                    WHERE pt.fk_pokemon = 25")
+                .ToListAsync();
+
+            // Récupérer les skills
+            var pokemonSkills = await _context.Database
+                .SqlQuery<int>($@"
+                    SELECT ps.fk_skill 
+                    FROM pokemon_skill ps 
+                    WHERE ps.fk_pokemon = 25")
+                .ToListAsync();
+
+            var skills = await _context.Skills
+                .Include(s => s.TypeChart)
+                .Where(s => pokemonSkills.Contains(s.Id))
+                .ToListAsync();
+
+            var result = new
+            {
+                id = pikachu.Id,
+                name = pikachu.name,
+                types = pokemonTypes,
+                healthPoint = pikachu.healthPoint,
+                maxHealthPoint = pikachu.maxHealthPoint,
+                strength = pikachu.strength,
+                defense = pikachu.defense,
+                speed = pikachu.speed,
+                skills = skills.Select(s => new
+                {
+                    id = s.Id,
+                    name = s.Name,
+                    damage = s.Damage,
+                    powerPoints = s.PowerPoints,
+                    accuracy = s.Accuracy,
+                    type = s.TypeChart?.typeName ?? "normal"
+                }).ToList()
+            };
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur GetMyPokemon: {ex.Message}");
+            return StatusCode(500, new { error = "Erreur lors de la récupération du Pokémon" });
+        }
+    }
+
     public class UseItemRequest
     {
         public int ItemId { get; set; }
