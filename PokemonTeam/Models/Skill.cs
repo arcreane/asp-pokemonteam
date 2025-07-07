@@ -66,6 +66,8 @@ namespace PokemonTeam.Models
         // Propriété calculée pour obtenir le nom du type
         [NotMapped]
         public string Type => TypeChart?.typeName ?? "Unknown";
+        
+        public ICollection<Pokemon> Pokemons { get; set; } = new List<Pokemon>();
 
         // Constructeur sans paramètres pour EF
         protected Skill() { }

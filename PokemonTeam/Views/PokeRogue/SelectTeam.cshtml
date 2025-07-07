@@ -1,0 +1,40 @@
+@{
+ViewData["Title"] = "Sélection de l'équipe";
+}
+
+<h2>Sélectionnez votre équipe (3 Pokémon)</h2>
+
+<form id="teamForm">
+    <div id="pokemonList" class="pokemon-list">
+        <!-- JS va remplir ça -->
+    </div>
+    <button type="submit" class="btn btn-success">Valider l'équipe</button>
+</form>
+
+@section Scripts {
+<script src="~/js/PlayerProfileHeader.js"></script>
+    
+<script src="~/js/PokeRogue/SelectTeam.js"></script>
+}
+
+<style>
+    .pokemon-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+    }
+    .pokemon-card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 0.5rem;
+        width: 150px;
+        text-align: center;
+        background-color: white;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .pokemon-card img {
+        width: 96px;
+        height: 96px;
+    }
+</style>

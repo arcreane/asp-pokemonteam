@@ -73,10 +73,12 @@ public class Pokemon
     public int unlockedXp { get; set; }
 
     // relations
-    [NotMapped]
-    public List<Skill>? skills { get; set; }
     
-    public List<TypeChart> Types { get; set; } = new();
+    //public List<Skill>? Skill { get; set; }
+    public ICollection<Skill> Skill { get; set; }
+    
+    public ICollection<TypeChart> Types { get; set; }
+    //public List<TypeChart> Types { get; set; } = new();
 
     [NotMapped]
     public Pokemon? evolveTo { get; set; }
@@ -91,7 +93,7 @@ public class Pokemon
         byte strength, 
         byte speed, 
         int unlockedXp, 
-        List<Skill> skills, 
+        List<Skill> Skill, 
         List<TypeChart> Types,
         Pokemon evolveTo = null)
     {
@@ -102,7 +104,7 @@ public class Pokemon
         this.strength = strength;
         this.speed = speed;
         this.unlockedXp = unlockedXp;
-        this.skills = skills;
+        this.Skill = Skill;
         this.Types = Types;
         this.evolveTo = evolveTo;
     }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 
@@ -31,6 +32,8 @@ namespace PokemonTeam.Models;
 /// <author>
 /// Mael
 /// </author>
+///
+[Table("type")]
 public class TypeChart
 {
     

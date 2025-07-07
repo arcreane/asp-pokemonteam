@@ -94,5 +94,22 @@ public class PokemonDbContext : DbContext
                     .HasForeignKey("fk_pokemon")
                     .HasConstraintName("FK_pokemon_type_pokemon")
             );
+        
+        modelBuilder.Entity<Pokemon>()
+            .HasMany(p => p.Skill)
+            .WithMany(s => s.Pokemons)
+            .UsingEntity<Dictionary<string, object>>(
+                "pokemon_skill",
+                j => j
+                    .HasOne<Skill>()
+                    .WithMany()
+                    .HasForeignKey("fk_skill")
+                    .HasConstraintName("FK_pokemon_skill_skill"),
+                j => j
+                    .HasOne<Pokemon>()
+                    .WithMany()
+                    .HasForeignKey("fk_pokemon")
+                    .HasConstraintName("FK_pokemon_skill_pokemon")
+            );
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 using PokemonTeam.Exceptions;
 using PokemonTeam.Models;
+using PokemonTeam.Models.Dto;
 using PokemonTeam.Services;
 
 namespace PokemonTeam.Controllers;
@@ -96,15 +97,35 @@ public class PokemonController : ControllerBase
         return Ok(pokemon);
     }
 
-    
+
     /// <summary>
     /// This method retrieves all Pokémon.
     /// </summary>
     /// <returns>List of Pokémon</returns>
     [HttpGet("getAllPokemon")]
-    public async Task<ActionResult<List<Pokemon>>> GetAllPokemon()
+    public async Task<ActionResult<List<PokemonDto>>> GetAllPokemon()
     {
-        var pokemons = await _ctx.Pokemons.ToListAsync();
-        return Ok(pokemons);
+        var pokemons = await _ctx.Pokemons
+            .Include(p => p.Skill)
+            .Include(p => p.Types)
+            .ToListAsync();
+
+        var result = pokemons.Select(p => new PokemonDto
+        {
+            Id = p.Id,
+            name = p.name,
+            healthPoint = p.healthPoint,
+            maxHealthPoint = p.maxHealthPoint,
+            defense = p.defense,
+            strength = p.strength,
+            speed = p.speed,
+            unlockedXp = p.unlockedXp,
+            skills = p.Skill.Select(s => s.Name).ToList(),
+            types = p.Types.Select(t => t.typeName).ToList()
+        }).ToList();
+
+        return Ok(result);
+
     }
+
 }
