@@ -77,22 +77,36 @@ public class AuthController : Controller
 
         var user = await _context.UserAuths.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user == null)
+        {
+            Console.WriteLine($"DEBUG: Utilisateur non trouvé pour email: {request.Email}");
             return Unauthorized("Email ou mot de passe incorrect");
+        }
+
+        Console.WriteLine($"DEBUG: Utilisateur trouvé: {user.Email}");
+        Console.WriteLine($"DEBUG: Hash stocké: {user.Password}");
+        Console.WriteLine($"DEBUG: Mot de passe reçu: {request.Password}");
 
         var result = _passwordHasher.VerifyHashedPassword(user, user.Password, request.Password);
+        Console.WriteLine($"DEBUG: Résultat vérification: {result}");
+
         if (result == PasswordVerificationResult.Failed)
+        {
+            Console.WriteLine("DEBUG: Échec de la vérification du mot de passe");
             return Unauthorized("Email ou mot de passe incorrect");
+        }
 
         var token = _tokenService.CreateToken(user.Id, user.Email);
 
         Response.Cookies.Append("access_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = false, // Puts to false if not using HTTPS
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddMinutes(60)
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddMinutes(60),
+            Path = "/"
         });
 
+        Console.WriteLine("DEBUG: Connexion réussie, token créé");
         return Ok(new { message = "Connexion réussie" });
     }
 

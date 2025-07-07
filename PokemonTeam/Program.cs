@@ -48,8 +48,8 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-            )
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "SuperSecretKeyForJWTTokenGeneration2025PokemonTeamApplicationVeryLongKeyForSecurity!")
+        )
         };
     });
 
@@ -58,7 +58,6 @@ builder.Services.AddAuthorization();
 // Services d'application
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ITypeChartService, TypeChartService>();
-
 builder.Services.AddScoped<IPasswordHasher<UserAuthModel>, PasswordHasher<UserAuthModel>>();
 
 var app = builder.Build();
@@ -66,25 +65,22 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
     var context = services.GetRequiredService<PokemonDbContext>();
     DbInitializer.Initialize(context);
 }
-
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// CORRECTION: Commenté temporairement pour éviter le problème HTTPS
+// app.UseHttpsRedirection();
+
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -93,4 +89,3 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
