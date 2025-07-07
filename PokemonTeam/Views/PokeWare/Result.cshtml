@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Résultat du Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center text-success">🎉 Quiz terminé !</h2>
+
+<div class="text-center mt-4">
+    <p class="lead">Score final : <strong>@ViewBag.FinalScore</strong></p>
+    <p>Bonus de fin (Pokémon restants) : <strong>+@ViewBag.Bonus pts</strong></p>
+    <p>Pokédollars gagnés : <strong>@ViewBag.PokeDollars 💰</strong></p>
+</div>
+
+<div class="text-center mt-5">
+    <a class="btn btn-primary" asp-action="SelectTeam">🔁 Rejouer</a>
+    <a class="btn btn-secondary" href="/">🏠 Retour à l'accueil</a>
+</div>

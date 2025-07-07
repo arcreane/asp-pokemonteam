@@ -1,0 +1,57 @@
+﻿@model List<ObjectItem>
+
+@{
+    ViewData["Title"] = "Boutique - Objets à utiliser";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="text-center">🎒 Objets disponibles</h2>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-info text-center">@TempData["Message"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p class="text-center">Tu ne possèdes aucun objet pour le moment.</p>
+}
+else
+{
+    <div class="row justify-content-center mt-4">
+        @foreach (var obj in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@obj.Name</h5>
+                        <p class="card-text">Effet : @GetItemEffect(obj.Name)</p>
+
+                        <form asp-action="UseObject" method="post">
+                            <input type="hidden" name="objectId" value="@obj.Id" />
+                            <button type="submit" class="btn btn-success">Utiliser</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<div class="text-center mt-4">
+    <a class="btn btn-primary" asp-action="Question">↩ Revenir au quiz</a>
+</div>
+
+@functions {
+    private string GetItemEffect(string name)
+    {
+        return name switch
+        {
+            "Potion" => "+1 vie",
+            "Élixir" => "Passer une question",
+            "Baie Sitrus" => "Protège d'une erreur",
+            "Bonbon" => "+10 points",
+            _ => "Effet inconnu"
+        };
+    }
+}
