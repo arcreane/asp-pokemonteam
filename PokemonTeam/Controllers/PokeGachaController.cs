@@ -33,17 +33,17 @@ public class PokeGachaController : Controller
             .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
 
         if (player == null)
-            return BadRequest("Joueur introuvable.");
+            return BadRequest("Player not found.");
 
         if (player.Pokedollar < 10)
-            return BadRequest(new { error = "Pas assez de pokédollars." });
+            return BadRequest(new { error = "Not enough pokédollars." });
 
         var random = new Random();
         var pokemonId = random.Next(1, 152);
         var pokemon = await _ctx.Pokemons.FindAsync(pokemonId);
 
         if (pokemon == null)
-            return NotFound("Pokémon non trouvé.");
+            return NotFound("Pokémon not found.");
 
         player.Pokedollar -= 10;
         await _ctx.SaveChangesAsync();
@@ -87,7 +87,7 @@ public class PokeGachaController : Controller
             .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == "pokeGacha");
 
         if (player == null || !player.Pokemons.Any())
-            return BadRequest("Aucun Pokémon disponible pour le combat.");
+            return BadRequest("No pokémon available for this fight.");
 
         var playerPokemon = player.Pokemons.OrderBy(x => Guid.NewGuid()).First();
 
@@ -97,18 +97,18 @@ public class PokeGachaController : Controller
             .FirstOrDefaultAsync(p => p.Id == randomEnemyId);
 
         if (enemyPokemon == null)
-            return NotFound("Aucun Pokémon ennemi trouvé.");
+            return NotFound("Ennemy pokémon not found.");
 
         var tackleSkill = await _ctx.Skills
             .Include(s => s.TypeChart)
             .FirstOrDefaultAsync(s => s.Id == 1);
 
         if (tackleSkill == null)
-            return NotFound("Skill Tackle introuvable.");
+            return NotFound("Skill Tackle not found.");
 
         var history = new List<string>();
 
-        history.Add($"<span style='color:green'>Ton {playerPokemon.name}</span> entre en combat contre <span style='color:red'>{enemyPokemon.name}</span> !");
+        history.Add($"<span style='color:green'>Your {playerPokemon.name}</span> will fight against <span style='color:red'>{enemyPokemon.name}</span> !");
 
         var battleService = new BattleService(_ctx);
         var playerTurn = playerPokemon.speed >= enemyPokemon.speed;
@@ -120,11 +120,11 @@ public class PokeGachaController : Controller
             {
                 var result = await battleService.UseSkill(tackleSkill, playerPokemon, enemyPokemon);
 
-                history.Add($"<span style='color:green'>{playerPokemon.name}</span> attaque, <span style='color:red'>{enemyPokemon.name}</span> perd {result.DamageDealt} HP (PV restants {enemyPokemon.healthPoint})");
+                history.Add($"<span style='color:green'>{playerPokemon.name}</span> attack, <span style='color:red'>{enemyPokemon.name}</span> lose {result.DamageDealt} HP (HP: {enemyPokemon.healthPoint}/{enemyPokemon.maxHealthPoint})");
 
                 if (enemyPokemon.healthPoint <= 0)
                 {
-                    history.Add($"<span style='color:green'>{playerPokemon.name}</span> a gagné !");
+                    history.Add($"<span style='color:green'>{playerPokemon.name}</span> won !");
                     player.Pokedollar += 5;
                     finished = true;
                     break;
@@ -134,15 +134,15 @@ public class PokeGachaController : Controller
             {
                 var result = await battleService.UseSkill(tackleSkill, enemyPokemon, playerPokemon);
 
-                history.Add($"<span style='color:red'>{enemyPokemon.name}</span> attaque, <span style='color:green'>{playerPokemon.name}</span> perd {result.DamageDealt} HP (PV restants {playerPokemon.healthPoint})");
+                history.Add($"<span style='color:red'>{enemyPokemon.name}</span> attack, <span style='color:green'>{playerPokemon.name}</span> lose {result.DamageDealt} HP (HP: {playerPokemon.healthPoint}/{playerPokemon.maxHealthPoint})");
 
                 if (playerPokemon.healthPoint <= 0)
                 {
-                    history.Add($"<span style='color:red'>{enemyPokemon.name}</span> a gagné !");
+                    history.Add($"<span style='color:red'>{enemyPokemon.name}</span> won !");
                     if (new Random().NextDouble() < 0.1)
                     {
                         player.Pokemons.Remove(playerPokemon);
-                        history.Add($"{playerPokemon.name} s'est enfui de peur !");
+                        history.Add($"{playerPokemon.name} ran away of fear !");
                     }
                     finished = true;
                     break;
@@ -156,15 +156,22 @@ public class PokeGachaController : Controller
         playerPokemon.healthPoint = playerPokemon.maxHealthPoint;
         enemyPokemon.healthPoint = enemyPokemon.maxHealthPoint;
 
+        tackleSkill.PowerPoints = 35;
+
         await _ctx.SaveChangesAsync();
 
         return Ok(new
         {
             history,
             playerPokemon = playerPokemon.name,
+            playerPokemonId = playerPokemon.Id,
             enemyPokemon = enemyPokemon.name,
+            enemyPokemonId = enemyPokemon.Id,
+            playerStarts = playerPokemon.speed >= enemyPokemon.speed,
             currentPokedollar = player.Pokedollar
         });
+
+
     }
 
 }
