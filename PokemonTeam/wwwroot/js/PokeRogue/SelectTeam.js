@@ -29,7 +29,7 @@ window.addEventListener("DOMContentLoaded", function() {
         card.innerHTML = `
                     <input type="checkbox" id="poke${index}" name="pokemonSelect" value="${p.name}">
                     <label for="poke${index}">
-                        <strong>${p.name}</strong> (${p.types.map(t => t.typeName).join("/")})<br>
+                    <strong>${p.name}</strong> (${p.types.join("/")})<br>
                         <img src="${imgUrl}" alt="${p.name}"><br>
                         PV: ${p.healthPoint}<br>
                         Attaque: ${p.strength}<br>
