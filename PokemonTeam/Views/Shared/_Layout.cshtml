@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] - PokemonTeam</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/PariPoke.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
     <link rel="stylesheet" href="~/PokemonTeam.styles.css" asp-append-version="true" />
 </head>
 <body>

@@ -1,6 +1,11 @@
 @{
 ViewData["Title"] = "Accueil - PokeRace";
+
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/PariPoke.css" asp-append-version="true" />
+}
+
 <h2>Mon Jeu</h2>
 <p>Bienvenue dans le jeu ! Choisis un Pokémon et prépare-toi à la course.</p>
 @Html.Partial("_ShopPartial")
