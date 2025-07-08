@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PokemonTeam.Data;
 using PokemonTeam.Models;
 using PokemonTeam.Models.PlayerDTO;
+using Microsoft.Data.SqlClient;
 
 namespace PokemonTeam.Controllers;
 
@@ -225,10 +226,193 @@ public class PlayerController : Controller
         }
     }
 
-    public class UseItemRequest
+    // === À AJOUTER DANS PlayerController.cs ===
+
+
+    /// <summary>
+    /// Update player's Pokemon stats after battle
+    /// </summary>
+    [HttpPost("update-pokemon")]
+    [Authorize]
+    public async Task<IActionResult> UpdatePokemonStats([FromBody] UpdatePokemonRequest request)
     {
-        public int ItemId { get; set; }
+        try
+        {
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            var player = await _context.Players
+                .Include(p => p.UserAuth)
+                .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+            if (player == null) return NotFound(new { error = "Joueur non trouvé" });
+
+            // CORRECTION: Utiliser une requête SQL directe pour modifier les stats
+            // car les propriétés sont en private set
+            var statIncrease = Math.Max(1, request.XpGained / 10);
+            
+            var sql = @"
+                UPDATE pokemon 
+                SET 
+                    health_point = CASE WHEN health_point + @hpIncrease > 200 THEN 200 ELSE health_point + @hpIncrease END,
+                    max_health_point = CASE WHEN max_health_point + @hpIncrease > 200 THEN 200 ELSE max_health_point + @hpIncrease END,
+                    strength = CASE WHEN strength + @strIncrease > 120 THEN 120 ELSE strength + @strIncrease END,
+                    defense = CASE WHEN defense + @defIncrease > 100 THEN 100 ELSE defense + @defIncrease END,
+                    speed = CASE WHEN speed + @spdIncrease > 150 THEN 150 ELSE speed + @spdIncrease END
+                WHERE id = 25";
+
+            await _context.Database.ExecuteSqlRawAsync(sql, 
+                new Microsoft.Data.SqlClient.SqlParameter("@hpIncrease", statIncrease),
+                new Microsoft.Data.SqlClient.SqlParameter("@strIncrease", statIncrease / 2),
+                new Microsoft.Data.SqlClient.SqlParameter("@defIncrease", statIncrease / 3),
+                new Microsoft.Data.SqlClient.SqlParameter("@spdIncrease", statIncrease / 2));
+
+            // Récupérer les nouvelles stats
+            var updatedPokemon = await _context.Pokemons.FindAsync(25);
+            
+            if (updatedPokemon == null) 
+                return NotFound(new { error = "Pokémon non trouvé après mise à jour" });
+
+            return Ok(new { 
+                message = "Pokémon amélioré !",
+                newStats = new {
+                    hp = updatedPokemon.healthPoint,
+                    maxHp = updatedPokemon.maxHealthPoint,
+                    strength = updatedPokemon.strength,
+                    defense = updatedPokemon.defense,
+                    speed = updatedPokemon.speed
+                },
+                improvements = new {
+                    hp = statIncrease,
+                    strength = statIncrease / 2,
+                    defense = statIncrease / 3,
+                    speed = statIncrease / 2
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur UpdatePokemonStats: {ex.Message}");
+            return StatusCode(500, new { error = "Erreur lors de la mise à jour" });
+        }
+    }
+
+    /// <summary>
+    /// Heal player's Pokemon
+    /// </summary>
+    [HttpPost("heal-pokemon")]
+    [Authorize]
+    public async Task<IActionResult> HealPokemon([FromBody] HealPokemonRequest request)
+    {
+        try
+        {
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            var player = await _context.Players
+                .Include(p => p.UserAuth)
+                .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+            if (player == null) return NotFound(new { error = "Joueur non trouvé" });
+
+            // CORRECTION: Utiliser une requête SQL pour modifier les HP
+            var sql = "UPDATE pokemon SET health_point = max_health_point WHERE id = 25";
+            await _context.Database.ExecuteSqlRawAsync(sql);
+
+            // Récupérer les nouvelles stats
+            var healedPokemon = await _context.Pokemons.FindAsync(25);
+            
+            return Ok(new { 
+                message = "Pokémon soigné !",
+                newHP = healedPokemon?.healthPoint ?? 0
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur HealPokemon: {ex.Message}");
+            return StatusCode(500, new { error = "Erreur lors du soin" });
+        }
+    }
+
+    /// <summary>
+    /// Capture a new Pokemon
+    /// </summary>
+    [HttpPost("capture-pokemon")]
+    [Authorize]
+    public async Task<IActionResult> CapturePokemon([FromBody] CapturePokemonRequest request)
+    {
+        try
+        {
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+
+            var player = await _context.Players
+                .Include(p => p.UserAuth)
+                .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == request.Game);
+
+            if (player == null) return NotFound(new { error = "Joueur non trouvé" });
+
+            // Vérifier si le joueur a assez d'argent (coût de capture)
+            var captureeCost = 100;
+            if (player.Pokedollar < captureeCost)
+            {
+                return BadRequest(new { error = "Pas assez de Pokédollars pour capturer !" });
+            }
+
+            // Chance de capture basée sur le niveau
+            var captureChance = Math.Max(0.3, Math.Min(0.9, (double)player.Experience / 1000));
+            var random = new Random();
+            
+            if (random.NextDouble() > captureChance)
+            {
+                return Ok(new { 
+                    success = false, 
+                    message = "Échec de la capture ! Le Pokémon s'est échappé.",
+                    chanceUsed = Math.Round(captureChance * 100, 1)
+                });
+            }
+
+            // Succès de capture
+            player.Pokedollar -= captureeCost;
+            player.Experience += 25; // Bonus XP pour capture
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { 
+                success = true,
+                message = $"Pokémon capturé avec succès ! (Coût: {captureeCost} Pokédollars)",
+                newBalance = player.Pokedollar,
+                bonusXp = 25,
+                chanceUsed = Math.Round(captureChance * 100, 1)
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur CapturePokemon: {ex.Message}");
+            return StatusCode(500, new { error = "Erreur lors de la capture" });
+        }
+    }
+
+    // === MODÈLES DE REQUÊTES ===
+
+    public class UpdatePokemonRequest
+    {
+        public string Game { get; set; } = string.Empty;
+        public int XpGained { get; set; }
+    }
+
+    public class HealPokemonRequest
+    {
         public string Game { get; set; } = string.Empty;
     }
 
-}
+    public class CapturePokemonRequest
+    {
+        public string Game { get; set; } = string.Empty;
+        public int PokemonId { get; set; }
+    }
+
+        public class UseItemRequest
+        {
+            public int ItemId { get; set; }
+            public string Game { get; set; } = string.Empty;
+        }
+
+    }

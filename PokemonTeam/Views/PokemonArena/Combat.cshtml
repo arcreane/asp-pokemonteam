@@ -31,6 +31,21 @@
                             <small>DEF: <span id="player-defense">???</span></small>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <small>SPD: <span id="player-speed">???</span></small>
+                        </div>
+                        <div class="col-6">
+                            <small>LVL: <span id="player-level">1</span></small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bouton de soins -->
+                <div class="text-center mt-2">
+                    <button class="btn btn-success btn-sm" onclick="healCompletely()" title="Soigner complètement (gratuit)">
+                        <i class="fas fa-heart"></i> Centre Pokémon
+                    </button>
                 </div>
             </div>
         </div>
@@ -43,6 +58,14 @@
                 <button id="new-battle-btn" class="btn btn-light btn-sm">
                     <i class="fas fa-redo"></i> Nouveau Combat
                 </button>
+                
+                <!-- Statistiques de combat -->
+                <div class="mt-3">
+                    <small class="text-light">
+                        <div>Combats gagnés: <span id="battles-won">0</span></div>
+                        <div>Pokémon capturés: <span id="pokemon-captured">0</span></div>
+                    </small>
+                </div>
             </div>
         </div>
         
@@ -68,6 +91,14 @@
                             <small>DEF: <span id="enemy-defense">???</span></small>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <small>SPD: <span id="enemy-speed">???</span></small>
+                        </div>
+                        <div class="col-6">
+                            <small>TYPE: <span id="enemy-types">???</span></small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,7 +115,6 @@
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Attaques :</h6>
-                        <!-- Les boutons seront générés dynamiquement -->
                         <div id="skill-buttons">
                             <div class="text-center text-muted">
                                 <i class="fas fa-spinner fa-spin"></i> Chargement des attaques...
@@ -96,19 +126,26 @@
                         <h6>Objets :</h6>
                         <div id="item-buttons">
                             <button class="btn btn-success mb-2" onclick="usePotion()">
-                                <i class="fas fa-heart"></i> Potion
+                                <i class="fas fa-heart"></i> Utiliser Potion
                             </button>
-                            <button class="btn btn-info mb-2" onclick="showItems()">
-                                <i class="fas fa-backpack"></i> Inventaire
+                            <button class="btn btn-info mb-2" onclick="window.location.href='/PokemonArena/Shop'">
+                                <i class="fas fa-shopping-cart"></i> Acheter Potions
                             </button>
                         </div>
+                        
+                        <h6 class="mt-3">Stratégie :</h6>
+                        <div>
+                            <button id="run-btn" class="btn btn-warning mb-2">
+                                <i class="fas fa-running"></i> Fuir
+                            </button>
+                            <div>
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb"></i> 
+                                    Votre Pokémon s'améliore à chaque victoire !
+                                </small>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="mt-3">
-                    <button id="run-btn" class="btn btn-warning">
-                        <i class="fas fa-running"></i> Fuir
-                    </button>
                 </div>
             </div>
             
@@ -116,18 +153,43 @@
                 <h4 id="battle-result">Combat Terminé</h4>
                 <div id="rewards" class="mt-3"></div>
                 <button id="continue-btn" class="btn btn-primary mt-3">
-                    <i class="fas fa-play"></i> Continuer
+                    <i class="fas fa-play"></i> Combat Suivant
                 </button>
             </div>
         </div>
     </div>
     
-    <!-- Log de Combat -->
+    <!-- Informations et Log -->
     <div class="col-md-4">
+        <div class="game-panel mb-3">
+            <h4><i class="fas fa-chart-line"></i> Progression</h4>
+            <div class="progress mb-2" title="Expérience">
+                <div id="xp-progress" class="progress-bar bg-warning" style="width: 0%">
+                    <span id="xp-progress-text">0 XP</span>
+                </div>
+            </div>
+            
+            <div class="row text-center">
+                <div class="col-4">
+                    <small>Niveau</small><br>
+                    <strong id="player-display-level">1</strong>
+                </div>
+                <div class="col-4">
+                    <small>Victoires</small><br>
+                    <strong id="player-victories">0</strong>
+                </div>
+                <div class="col-4">
+                    <small>Argent</small><br>
+                    <strong id="player-money-display">0</strong>
+                </div>
+            </div>
+        </div>
+        
         <div class="game-panel">
             <h4><i class="fas fa-scroll"></i> Journal de Combat</h4>
             <div id="combat-log" class="combat-log">
-                Préparez-vous au combat !
+                Préparez-vous au combat !<br>
+                <small class="text-muted">Votre Pokémon grandit avec chaque victoire.</small>
             </div>
         </div>
     </div>
@@ -138,6 +200,31 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             initializeCombat();
+            updateProgressDisplay();
         });
+        
+        // Mettre à jour l'affichage de progression
+        async function updateProgressDisplay() {
+            try {
+                const player = await API.player.getMe();
+                const level = Math.floor(player.experience / 100) + 1;
+                const xpInLevel = player.experience % 100;
+                
+                document.getElementById('player-display-level').textContent = level;
+                document.getElementById('player-money-display').textContent = player.pokedollar;
+                document.getElementById('xp-progress').style.width = xpInLevel + '%';
+                document.getElementById('xp-progress-text').textContent = `${xpInLevel}/100 XP`;
+                
+                // Estimer les victoires
+                const victories = Math.floor(player.experience / 25);
+                document.getElementById('player-victories').textContent = victories;
+                
+            } catch (error) {
+                console.error('Erreur mise à jour progression:', error);
+            }
+        }
+        
+        // Mettre à jour périodiquement
+        setInterval(updateProgressDisplay, 5000);
     </script>
 }
