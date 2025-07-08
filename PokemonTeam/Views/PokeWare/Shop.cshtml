@@ -1,46 +1,311 @@
-﻿@model List<ObjectItem>
+﻿@model List<Item>
 
 @{
     ViewData["Title"] = "Boutique - Objets à utiliser";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="text-center">🎒 Objets disponibles</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
 
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-info text-center">@TempData["Message"]</div>
-}
+            <!-- En-tête de la boutique -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-store"></i> Boutique PokeWare
+                </h1>
+                <p class="lead text-muted">Utilise tes objets pour améliorer tes performances</p>
+            </div>
 
-@if (!Model.Any())
-{
-    <p class="text-center">Tu ne possèdes aucun objet pour le moment.</p>
-}
-else
-{
-    <div class="row justify-content-center mt-4">
-        @foreach (var obj in Model)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">@obj.Name</h5>
-                        <p class="card-text">Effet : @GetItemEffect(obj.Name)</p>
+            <!-- Messages -->
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> @TempData["Message"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
 
-                        <form asp-action="UseObject" method="post">
-                            <input type="hidden" name="objectId" value="@obj.Id" />
-                            <button type="submit" class="btn btn-success">Utiliser</button>
-                        </form>
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Inventaire -->
+            @if (!Model.Any())
+            {
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="card text-center">
+                            <div class="card-body py-5">
+                                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">Inventaire vide</h4>
+                                <p class="text-muted">Tu ne possèdes aucun objet pour le moment.</p>
+                                <p class="text-muted">Continue à jouer pour gagner des objets !</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Statistiques rapides -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <h5 class="text-primary">@Model.Count</h5>
+                                        <small class="text-muted">Objets disponibles</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="text-success">@Model.Count(x => x.Name.Contains("Potion"))</h5>
+                                        <small class="text-muted">Potions</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="text-warning">@Model.Count(x => x.Name.Contains("Super"))</h5>
+                                        <small class="text-muted">Supers potions</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grille des objets -->
+                <div class="row g-4">
+                    @foreach (var obj in Model)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card item-card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div class="item-header d-flex align-items-center mb-3">
+                                        <div class="item-icon me-3">
+                                            @GetItemIcon(obj.Name)
+                                        </div>
+                                        <div>
+                                            <h5 class="card-title mb-1">@obj.Name</h5>
+                                            <span class="badge @GetItemBadgeClass(obj.Name)">@GetItemType(obj.Name)</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="item-description mb-3">
+                                        <p class="card-text text-muted">@GetItemDescription(obj.Name)</p>
+                                        <div class="effect-box p-2 bg-light rounded">
+                                            <strong>Effet:</strong> @GetItemEffect(obj.Name)
+                                        </div>
+                                    </div>
+
+                                    <div class="item-rarity mb-3">
+                                        @GetItemRarity(obj.Name)
+                                    </div>
+
+                                    <form asp-action="UseObject" method="post" class="use-item-form">
+                                        <input type="hidden" name="objectId" value="@obj.Id" />
+                                        <button type="submit" class="btn @GetItemButtonClass(obj.Name) w-100"
+                                                onclick="return confirmUse('@obj.Name')">
+                                            <i class="fas fa-magic"></i> Utiliser
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Navigation -->
+            <div class="text-center mt-5">
+                <div class="btn-group" role="group">
+                    <a class="btn btn-primary btn-lg" asp-action="Question">
+                        <i class="fas fa-arrow-left"></i> Continuer le quiz
+                    </a>
+                    <a class="btn btn-outline-secondary btn-lg" asp-action="SelectMode">
+                        <i class="fas fa-home"></i> Menu principal
+                    </a>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-question-circle"></i> Guide des objets
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-heart text-danger"></i> Objets de soin</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Potion :</strong> Restaure 1 point de vie</li>
+                                        <li><strong>Max Potion :</strong> Restaure toutes les vies</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-star text-warning"></i> Objets de boost</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Super Potion :</strong> Ajoute 10 points</li>
+                                        <li><strong>Hyper Potion :</strong> Ajoute 20 points</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        }
+        </div>
     </div>
-}
-
-<div class="text-center mt-4">
-    <a class="btn btn-primary" asp-action="Question">↩ Revenir au quiz</a>
 </div>
+
+<style>
+    .item-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #007bff;
+        }
+
+    .item-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #f8f9fa;
+    }
+
+    .effect-box {
+        border-left: 4px solid #007bff;
+    }
+
+    .item-rarity {
+        text-align: center;
+    }
+
+    .rarity-common {
+        color: #6c757d;
+    }
+
+    .rarity-uncommon {
+        color: #28a745;
+    }
+
+    .rarity-rare {
+        color: #007bff;
+    }
+
+    .rarity-epic {
+        color: #6f42c1;
+    }
+
+    .rarity-legendary {
+        color: #fd7e14;
+    }
+
+    .use-item-form button {
+        transition: all 0.3s ease;
+    }
+
+        .use-item-form button:hover {
+            transform: scale(1.05);
+        }
+
+        .use-item-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    /* Animation d'entrée */
+    .item-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.6s ease forwards;
+    }
+
+        .item-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .item-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .item-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .item-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .item-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .item-card:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+    @@keyframes slideInUp {
+        to
+
+    {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@media (max-width: 768px) {
+        .item-icon
+
+    {
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+    }
+
+    }
+</style>
+
+<script>
+    function confirmUse(itemName) {
+        return confirm(`Es-tu sûr de vouloir utiliser "${itemName}" ?`);
+    }
+
+    // Empêcher la soumission multiple
+    document.querySelectorAll('.use-item-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const button = this.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Utilisation...';
+        });
+    });
+
+    // Auto-dismiss alerts
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            if (alert.querySelector('.btn-close')) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
+        });
+    }, 5000);
+</script>
 
 @functions {
     private string GetItemEffect(string name)
@@ -48,10 +313,82 @@ else
         return name switch
         {
             "Potion" => "+1 vie",
-            "Élixir" => "Passer une question",
-            "Baie Sitrus" => "Protège d'une erreur",
-            "Bonbon" => "+10 points",
+            "Super Potion" => "+10 points",
+            "Hyper Potion" => "+20 points",
+            "Max Potion" => "Vies au maximum",
             _ => "Effet inconnu"
+        };
+    }
+
+    private string GetItemIcon(string name)
+    {
+        return name switch
+        {
+            "Potion" => "<i class='fas fa-heart text-danger'></i>",
+            "Super Potion" => "<i class='fas fa-star text-primary'></i>",
+            "Hyper Potion" => "<i class='fas fa-bolt text-warning'></i>",
+            "Max Potion" => "<i class='fas fa-crown text-success'></i>",
+            _ => "<i class='fas fa-question text-muted'></i>"
+        };
+    }
+
+    private string GetItemDescription(string name)
+    {
+        return name switch
+        {
+            "Potion" => "Restaure légèrement tes PV.",
+            "Super Potion" => "Augmente ton score de 10 points.",
+            "Hyper Potion" => "Augmente ton score de 20 points.",
+            "Max Potion" => "Restaure toutes tes vies.",
+            _ => "Objet mystérieux."
+        };
+    }
+
+    private string GetItemType(string name)
+    {
+        return name switch
+        {
+            "Potion" => "Soin",
+            "Super Potion" => "Boost",
+            "Hyper Potion" => "Boost",
+            "Max Potion" => "Soin",
+            _ => "Inconnu"
+        };
+    }
+
+    private string GetItemBadgeClass(string name)
+    {
+        return name switch
+        {
+            "Potion" => "bg-danger",
+            "Super Potion" => "bg-primary",
+            "Hyper Potion" => "bg-warning text-dark",
+            "Max Potion" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetItemButtonClass(string name)
+    {
+        return name switch
+        {
+            "Potion" => "btn-danger",
+            "Super Potion" => "btn-primary",
+            "Hyper Potion" => "btn-warning",
+            "Max Potion" => "btn-success",
+            _ => "btn-secondary"
+        };
+    }
+
+    private string GetItemRarity(string name)
+    {
+        return name switch
+        {
+            "Potion" => "<span class='rarity-common'>★☆☆☆☆ Commun</span>",
+            "Super Potion" => "<span class='rarity-uncommon'>★★☆☆☆ Peu commun</span>",
+            "Hyper Potion" => "<span class='rarity-rare'>★★★☆☆ Rare</span>",
+            "Max Potion" => "<span class='rarity-epic'>★★★★☆ Épique</span>",
+            _ => "<span class='rarity-common'>★☆☆☆☆ Commun</span>"
         };
     }
 }
