@@ -52,6 +52,11 @@ public class Pokemon
 
     [Column("name")]
     public string name { get; private set; }
+
+    // Some views or services expect a property named "Name". Expose an alias
+    // that maps to <see cref="name"/> to avoid null values when the code uses
+    // the capitalized property.
+    public string Name => name;
     
 
     [Column("health_point")]
