@@ -1,4 +1,5 @@
-﻿/// <summary>
+﻿namespace PokemonTeam.Models.PokeWare;
+/// <summary>
 /// This class represents a quiz question (text or image).
 /// </summary>
 /// <remarks>
@@ -13,7 +14,7 @@
 /// <author>
 /// Elerig
 /// </author>
-public class QuizQuestion
+public class PokeWareQuestion
 {
     public string QuestionText { get; set; } = "";
     public string? ImageUrl { get; set; } // null si question textuelle
