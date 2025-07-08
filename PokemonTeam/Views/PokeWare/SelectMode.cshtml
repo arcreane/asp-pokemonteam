@@ -3,32 +3,267 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Choisis un mode de quiz</h2>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
 
-<div class="d-flex justify-content-center flex-wrap gap-4 mt-4">
+            <!-- Titre principal -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-gamepad"></i> Choisis ton défi
+                </h1>
+                <p class="lead text-muted">Sélectionne le mode de quiz qui te correspond</p>
+            </div>
 
-    <form asp-action="StartQuiz" method="post">
-        <input type="hidden" name="numberOfQuestions" value="10" />
-        <button class="btn btn-success btn-lg">10 Questions</button>
-    </form>
+            <!-- Grille des modes -->
+            <div class="row g-4 mb-5">
 
-    <form asp-action="StartQuiz" method="post">
-        <input type="hidden" name="numberOfQuestions" value="20" />
-        <button class="btn btn-primary btn-lg">20 Questions</button>
-    </form>
+                <!-- Mode 10 Questions -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card game-mode-card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mode-icon mb-3">
+                                <i class="fas fa-leaf fa-3x text-success"></i>
+                            </div>
+                            <h4 class="card-title text-success">Débutant</h4>
+                            <p class="card-text text-muted">Parfait pour commencer</p>
+                            <div class="mode-stats mb-3">
+                                <span class="badge bg-success">10 Questions</span>
+                                <br>
+                                <small class="text-muted">~5 minutes</small>
+                            </div>
+                            <form asp-action="StartQuiz" method="post">
+                                <input type="hidden" name="numberOfQuestions" value="10" />
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-play"></i> Commencer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
-    <form asp-action="StartQuiz" method="post">
-        <input type="hidden" name="numberOfQuestions" value="50" />
-        <button class="btn btn-warning btn-lg">50 Questions</button>
-    </form>
+                <!-- Mode 20 Questions -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card game-mode-card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mode-icon mb-3">
+                                <i class="fas fa-fire fa-3x text-primary"></i>
+                            </div>
+                            <h4 class="card-title text-primary">Intermédiaire</h4>
+                            <p class="card-text text-muted">Pour les dresseurs expérimentés</p>
+                            <div class="mode-stats mb-3">
+                                <span class="badge bg-primary">20 Questions</span>
+                                <br>
+                                <small class="text-muted">~10 minutes</small>
+                            </div>
+                            <form asp-action="StartQuiz" method="post">
+                                <input type="hidden" name="numberOfQuestions" value="20" />
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-play"></i> Commencer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
-    <form asp-action="StartQuiz" method="post">
-        <input type="hidden" name="numberOfQuestions" value="9999" />
-        <button class="btn btn-danger btn-lg">Mode Infini 🔁</button>
-    </form>
+                <!-- Mode 50 Questions -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card game-mode-card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="mode-icon mb-3">
+                                <i class="fas fa-bolt fa-3x text-warning"></i>
+                            </div>
+                            <h4 class="card-title text-warning">Expert</h4>
+                            <p class="card-text text-muted">Défi pour les maîtres</p>
+                            <div class="mode-stats mb-3">
+                                <span class="badge bg-warning text-dark">50 Questions</span>
+                                <br>
+                                <small class="text-muted">~25 minutes</small>
+                            </div>
+                            <form asp-action="StartQuiz" method="post">
+                                <input type="hidden" name="numberOfQuestions" value="50" />
+                                <button type="submit" class="btn btn-warning btn-lg w-100">
+                                    <i class="fas fa-play"></i> Commencer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Mode Infini -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card game-mode-card h-100 shadow-sm border-danger">
+                        <div class="card-body text-center">
+                            <div class="mode-icon mb-3">
+                                <i class="fas fa-infinity fa-3x text-danger"></i>
+                            </div>
+                            <h4 class="card-title text-danger">Infini</h4>
+                            <p class="card-text text-muted">Jusqu'à ce que tu perdes</p>
+                            <div class="mode-stats mb-3">
+                                <span class="badge bg-danger">∞ Questions</span>
+                                <br>
+                                <small class="text-muted">Temps illimité</small>
+                            </div>
+                            <form asp-action="StartQuiz" method="post">
+                                <input type="hidden" name="numberOfQuestions" value="9999" />
+                                <button type="submit" class="btn btn-danger btn-lg w-100">
+                                    <i class="fas fa-play"></i> Relever le défi
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle"></i> Règles du jeu
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-heart text-danger"></i> Tu as 3 vies au début</li>
+                                        <li><i class="fas fa-star text-warning"></i> +10 points par bonne réponse</li>
+                                        <li><i class="fas fa-coins text-success"></i> Gagne des Pokédollars</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-shopping-cart text-primary"></i> Utilise la boutique pour des objets</li>
+                                        <li><i class="fas fa-gift text-info"></i> Bonus de fin selon tes vies restantes</li>
+                                        <li><i class="fas fa-trophy text-warning"></i> Deviens le meilleur dresseur !</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="text-center">
+                <a asp-controller="PokeWare" asp-action="SelectTeam" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Revenir à la sélection des Pokémon
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="text-center mt-5">
-    <a href="@Url.Action("SelectTeam", "Quiz")" class="btn btn-outline-secondary">← Revenir à la sélection des Pokémon</a>
-</div>
+<style>
+    .game-mode-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .game-mode-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+        }
+
+    .mode-icon {
+        margin-bottom: 20px;
+    }
+
+    .mode-stats {
+        padding: 10px 0;
+    }
+
+        .mode-stats .badge {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+        }
+
+    .card-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .btn-lg {
+        padding: 12px 20px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+    }
+
+    .border-danger {
+        border: 2px solid #dc3545 !important;
+    }
+
+    .game-mode-card .btn:hover {
+        transform: scale(1.05);
+    }
+
+    /* Animation pour les cartes */
+    .game-mode-card {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideInUp 0.6s ease forwards;
+    }
+
+        .game-mode-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .game-mode-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .game-mode-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .game-mode-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+    @@keyframes slideInUp {
+        to
+
+    {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .display-4
+
+    {
+        font-size: 2.5rem;
+    }
+
+    .mode-icon i {
+        font-size: 2rem !important;
+    }
+
+    }
+</style>
+
+<script>
+    // Ajouter des effets sonores ou animations supplémentaires si nécessaire
+    document.querySelectorAll('.game-mode-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Confirmation pour le mode infini
+    document.querySelector('form[action*="StartQuiz"] input[value="9999"]').parentElement.addEventListener('submit', function(e) {
+        if (!confirm('Es-tu sûr de vouloir commencer le mode infini ? Ce défi peut être très long !')) {
+            e.preventDefault();
+        }
+    });
+</script>
