@@ -136,12 +136,21 @@ public class PlayerController : Controller
         var item = player.Items.FirstOrDefault(i => i.Id == request.ItemId);
         if (item == null) return BadRequest("Item non possédé.");
 
+        if (player.Pokedollar < item.Price)
+            return BadRequest("Pokédollars insuffisants.");
+
+        player.Pokedollar -= item.Price;
+
         // Retire l'item
         player.Items.Remove(item);
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = $"Item '{item.Name}' utilisé et retiré de l'inventaire." });
+        return Ok(new
+        {
+            message = $"Item '{item.Name}' utilisé et retiré de l'inventaire.",
+            newBalance = player.Pokedollar
+        });
     }
 
     public class UseItemRequest
