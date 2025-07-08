@@ -1,59 +1,220 @@
 @model List<Pokemon>
-
 @{
-    ViewData["Title"] = "S�lection de ton �quipe";
-    Layout = "~/Views/Shared/_Layout.cshtml"; // Change si tu n�utilises pas _Layout
+    ViewData["Title"] = "Sélection de ton équipe";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>S�lectionne ton �quipe de 6 Pok�mon</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-4">
+                <h2 class="display-5 fw-bold text-primary">Sélectionne ton équipe de 6 Pokémon</h2>
+                <p class="lead text-muted">Choisis stratégiquement tes compagnons pour former l'équipe parfaite</p>
+            </div>
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
-<form method="post" asp-action="ConfirmTeam">
-    <div class="row">
-        @for (int i = 0; i < Model.Count; i++)
-        {
-            <div class="col-md-4 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@Model[i].Name</h5>
-                        <ul>
-                            <li><strong>PV :</strong> @Model[i].HealthPoint</li>
-                            <li><strong>Force :</strong> @Model[i].Strength</li>
-                            <li><strong>Vitesse :</strong> @Model[i].Speed</li>
-                        </ul>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="selectedPokemonIds" value="@Model[i].Id" id="poke@i" />
-                            <label class="form-check-label" for="poke@i">
-                                S�lectionner
-                            </label>
-                        </div>
+            <form method="post" asp-action="ConfirmTeam" id="teamSelectionForm">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Pokémon sélectionnés :</span>
+                        <span id="selectionCounter" class="badge bg-secondary">0/6</span>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
 
-    <div class="text-center mt-4">
-        <button type="submit" class="btn btn-primary">Valider mon �quipe</button>
+                <div class="row g-2">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        <div class="col-md-6 col-lg-6">
+                            <div class="card h-100 pokemon-card" data-pokemon-id="@Model[i].Id">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title text-center mb-3">
+                                        <span class="fw-bold">@Model[i].name</span>
+                                    </h5>
+
+                                    <div class="text-center mb-3">
+                                        <img class="pokemon-image"
+                                             src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(Model[i].Id).png"
+                                             alt="@Model[i].name" />
+                                    </div>
+
+
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input class="form-check-input pokemon-checkbox"
+                                               type="checkbox"
+                                               name="selectedPokemonIds"
+                                               value="@Model[i].Id"
+                                               id="pokemon_@Model[i].Id"
+                                               role="switch" />
+                                        <label class="form-check-label ms-2" for="pokemon_@Model[i].Id">
+                                            Sélectionner
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg" id="confirmButton" disabled>
+                        <i class="fas fa-check me-2"></i>
+                        Valider mon équipe
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
+
+@section Styles {
+    <style>
+        .pokemon-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+            .pokemon-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+            .pokemon-card.selected {
+                border-color: #0d6efd;
+                background-color: #f8f9ff;
+            }
+
+
+        .pokemon-image {
+            width: 96px;
+            height: 96px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .form-check-input:checked {
+            background-color: #198754;
+            border-color: #198754;
+        }
+
+        #selectionCounter {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+        }
+    </style>
+}
 
 @section Scripts {
     <script>
-        // Limite la s�lection � 6 pok�mon maximum
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                const checked = document.querySelectorAll('input[type="checkbox"]:checked');
-                if (checked.length > 6) {
-                    cb.checked = false;
-                    alert("Tu ne peux choisir que 6 Pok�mon.");
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.pokemon-checkbox');
+            const selectionCounter = document.getElementById('selectionCounter');
+            const confirmButton = document.getElementById('confirmButton');
+            const maxSelection = 6;
+
+            function updateUI() {
+                const selectedCount = document.querySelectorAll('.pokemon-checkbox:checked').length;
+
+                // Mettre à jour le compteur
+                selectionCounter.textContent = `${selectedCount}/${maxSelection}`;
+                selectionCounter.className = `badge ${selectedCount === maxSelection ? 'bg-success' : 'bg-secondary'}`;
+
+                // Activer/désactiver le bouton de validation
+                confirmButton.disabled = selectedCount === 0;
+
+                // Gérer l'état visuel des cartes
+                checkboxes.forEach(checkbox => {
+                    const card = checkbox.closest('.pokemon-card');
+                    if (checkbox.checked) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+
+                    // Désactiver les cases non cochées si limite atteinte
+                    if (selectedCount >= maxSelection && !checkbox.checked) {
+                        checkbox.disabled = true;
+                        card.style.opacity = '0.6';
+                    } else {
+                        checkbox.disabled = false;
+                        card.style.opacity = '1';
+                    }
+                });
+            }
+
+            // Ajouter les événements
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const selectedCount = document.querySelectorAll('.pokemon-checkbox:checked').length;
+
+                    if (selectedCount > maxSelection) {
+                        this.checked = false;
+                        showAlert('Tu ne peux choisir que 6 Pokémon maximum !', 'warning');
+                    }
+
+                    updateUI();
+                });
+            });
+
+            // Rendre toute la carte cliquable
+            document.querySelectorAll('.pokemon-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.tagName.toLowerCase() === 'label' || e.target.classList.contains('pokemon-checkbox')) {
+                        return;
+                    }
+                    const checkbox = card.querySelector('.pokemon-checkbox');
+                    checkbox.checked = !checkbox.checked;
+                    checkbox.dispatchEvent(new Event('change'));
+                });
+            });
+
+            // Gestion de la soumission du formulaire
+            document.getElementById('teamSelectionForm').addEventListener('submit', function(e) {
+                const selectedCount = document.querySelectorAll('.pokemon-checkbox:checked').length;
+
+                if (selectedCount === 0) {
+                    e.preventDefault();
+                    showAlert('Tu dois sélectionner au moins un Pokémon !', 'danger');
+                } else if (selectedCount > maxSelection) {
+                    e.preventDefault();
+                    showAlert(`Tu ne peux pas sélectionner plus de ${maxSelection} Pokémon !`, 'danger');
                 }
             });
+
+            function showAlert(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+
+                const container = document.querySelector('.container');
+                container.insertBefore(alertDiv, container.firstChild);
+
+                // Auto-dismiss après 5 secondes
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.remove();
+                    }
+                }, 5000);
+            }
+
+            // Initialisation
+            updateUI();
         });
     </script>
 }
