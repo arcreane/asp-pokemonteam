@@ -1,37 +1,145 @@
-﻿@model QuizQuestion
+﻿@model PokeWareQuestion
 
 @{
     ViewData["Title"] = "Question du Quiz";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    // HttpContext isn't available as a static property inside Razor views.
+    // Use the view context's HttpContext instance to access the session.
+    var session = Context.Session.GetObject<PokeWareSession>("QuizSession");
+    var currentQuestion = (session?.CurrentQuestionIndex + 1) ?? 1;
+    var totalQuestions = session?.TotalQuestions ?? 0;
+    var totalPokeDollars = ViewBag.TotalPokedollars ?? (session?.PokeDollarsEarned ?? 0);
 }
 
-<h2 class="text-center">Question @((HttpContext.Session.GetObject<QuizSession>("QuizSession")?.CurrentQuestionIndex + 1) ?? 1)</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
 
-<div class="text-center mt-4">
+            <!-- En-tête avec progression -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">Question @currentQuestion @(totalQuestions > 0 ? $"/ {totalQuestions}" : "")</h3>
+                    @if (totalQuestions > 0)
+                    {
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: @((currentQuestion * 100) / totalQuestions)%"
+                                 aria-valuenow="@currentQuestion"
+                                 aria-valuemin="0"
+                                 aria-valuemax="@totalQuestions">
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
 
-    @* Affichage visuel si image présente *@
-    @if (!string.IsNullOrEmpty(Model.ImageUrl))
-    {
-        <p class="lead">Qui est ce Pokémon ?</p>
-        <img src="@Model.ImageUrl" alt="Silhouette Pokémon" class="img-fluid" style="max-height: 300px;" />
-    }
-    else
-    {
-        <p class="lead">@Model.QuestionText</p>
-    }
-</div>
+            <!-- Contenu de la question -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center">
+                        @* Affichage visuel si image présente *@
+                        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                        {
+                            <p class="lead mb-4">Qui est ce Pokémon ?</p>
+                            <div class="mb-4">
+                                <img src="@Model.ImageUrl"
+                                     alt="Silhouette Pokémon"
+                                     class="img-fluid rounded shadow"
+                                     style="max-height: 300px; max-width: 100%;"
+                                     onerror="this.src='/images/pokemon-placeholder.png'; this.onerror=null;" />
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="lead mb-4">@Model.QuestionText</p>
+                        }
+                    </div>
 
-<form method="post" asp-action="SubmitAnswer">
-    <div class="d-flex flex-column align-items-center gap-3 mt-4">
-        @foreach (var choice in Model.Choices)
-        {
-            <button type="submit" name="userAnswer" value="@choice" class="btn btn-outline-primary w-50">
-                @choice
-            </button>
-        }
+                    <!-- Formulaire des réponses -->
+                    <form method="post" asp-action="SubmitAnswer" id="answerForm">
+                        <div class="d-grid gap-3 mt-4">
+                            @if (Model.Choices != null && Model.Choices.Any())
+                            {
+                                @foreach (var choice in Model.Choices)
+                                {
+                                    <button type="submit"
+                                            name="userAnswer"
+                                            value="@choice"
+                                            class="btn btn-outline-primary btn-lg answer-btn">
+                                        @choice
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control" name="userAnswer" placeholder="Entre ton choix" required />
+                                <button type="submit" class="btn btn-primary mt-2">Valider</button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informations de session -->
+            @if (session != null)
+            {
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <strong>Score:</strong> @session.Score
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Vies:</strong>
+                                <div class="d-flex justify-content-center mt-1">
+                                    @for (int i = 0; i < session.Pokemons.Count; i++)
+                                    {
+                                        var alive = i < session.LivesLeft;
+                                        <img class="life-pokemon @(alive ? "life-alive" : "life-dead")" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/@(session.Pokemons[i].Id).png" />
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Pokédollars:</strong> @totalPokeDollars 💰
+                            </div>
+                            <div class="col-md-3">
+                                <a class="btn btn-sm btn-secondary" asp-action="Store">
+                                    <i class="fas fa-shopping-cart"></i> Boutique
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
-</form>
-
-<div class="text-center mt-5">
-    <a class="btn btn-secondary" asp-action="Shop">🛒 Boutique</a>
 </div>
+
+<style>
+    .answer-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transition: all 0.2s ease;
+    }
+
+    .answer-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .progress-bar {
+        transition: width 0.5s ease;
+    }
+</style>
+
+<script>
+    // Empêcher les doubles clics sans désactiver le bouton choisi
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.answer-btn').forEach(b => {
+                if (b !== this) b.disabled = true;
+            });
+            this.classList.add('btn-primary');
+            this.classList.remove('btn-outline-primary');
+        });
+    });</script>

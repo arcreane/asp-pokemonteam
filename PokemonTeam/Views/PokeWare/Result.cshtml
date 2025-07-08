@@ -3,15 +3,247 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="text-center text-success">🎉 Quiz terminé !</h2>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
 
-<div class="text-center mt-4">
-    <p class="lead">Score final : <strong>@ViewBag.FinalScore</strong></p>
-    <p>Bonus de fin (Pokémon restants) : <strong>+@ViewBag.Bonus pts</strong></p>
-    <p>Pokédollars gagnés : <strong>@ViewBag.PokeDollars 💰</strong></p>
+            <!-- Titre avec animation -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-success mb-3 animate-bounce">
+                    <i class="fas fa-trophy"></i> Quiz terminé !
+                </h1>
+                <div class="celebration-emojis">🎉 🎊 🏆 🎈 🌟</div>
+            </div>
+
+            <!-- Carte des résultats -->
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white text-center">
+                    <h3 class="mb-0">📊 Résultats</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4 mb-4">
+                            <div class="result-stat">
+                                <i class="fas fa-star fa-2x text-warning mb-2"></i>
+                                <h4 class="text-primary">@(ViewBag.FinalScore ?? 0)</h4>
+                                <p class="text-muted">Score final</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="result-stat">
+                                <i class="fas fa-gift fa-2x text-info mb-2"></i>
+                                <h4 class="text-success">+@(ViewBag.Bonus ?? 0)</h4>
+                                <p class="text-muted">Bonus de fin</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="result-stat">
+                                <i class="fas fa-coins fa-2x text-warning mb-2"></i>
+                                <h4 class="text-warning">@(ViewBag.PokeDollars ?? 0) 💰</h4>
+                                <p class="text-muted">Pokédollars gagnés</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Détails supplémentaires -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <strong>Bonus de fin :</strong>
+                                @(ViewBag.Bonus ?? 0) points pour les Pokémon restants
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Évaluation des performances -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            @{
+                                var score = ViewBag.FinalScore ?? 0;
+                                var performance = "";
+                                var badgeClass = "";
+                                var icon = "";
+
+                                if (score >= 80)
+                                {
+                                    performance = "Maître Pokémon !";
+                                    badgeClass = "badge-success";
+                                    icon = "🏆";
+                                }
+                                else if (score >= 60)
+                                {
+                                    performance = "Excellent dresseur !";
+                                    badgeClass = "badge-primary";
+                                    icon = "🥇";
+                                }
+                                else if (score >= 40)
+                                {
+                                    performance = "Bon dresseur !";
+                                    badgeClass = "badge-warning";
+                                    icon = "🥈";
+                                }
+                                else if (score >= 20)
+                                {
+                                    performance = "Dresseur novice";
+                                    badgeClass = "badge-info";
+                                    icon = "🥉";
+                                }
+                                else
+                                {
+                                    performance = "Continue à t'entraîner !";
+                                    badgeClass = "badge-secondary";
+                                    icon = "📚";
+                                }
+                            }
+
+                            <span class="badge @badgeClass badge-lg p-3">
+                                @icon @performance
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Boutons d'actions -->
+            <div class="text-center mt-5">
+                <div class="btn-group-vertical btn-group-lg gap-3" role="group">
+                    <a class="btn btn-primary btn-lg" asp-action="SelectTeam">
+                        <i class="fas fa-redo"></i> Rejouer
+                    </a>
+                    <a class="btn btn-success btn-lg" asp-action="Store">
+                        <i class="fas fa-shopping-cart"></i> Visiter la boutique
+                    </a>
+                    <a class="btn btn-outline-secondary btn-lg" href="/">
+                        <i class="fas fa-home"></i> Retour à l'accueil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Partage des résultats -->
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <h5>Partage ton score !</h5>
+                    <p class="text-muted">J'ai obtenu @(ViewBag.FinalScore ?? 0) points au quiz Pokémon !</p>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary" onclick="shareScore()">
+                            <i class="fas fa-share"></i> Partager
+                        </button>
+                        <button class="btn btn-outline-success" onclick="copyScore()">
+                            <i class="fas fa-copy"></i> Copier
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="text-center mt-5">
-    <a class="btn btn-primary" asp-action="SelectTeam">🔁 Rejouer</a>
-    <a class="btn btn-secondary" href="/">🏠 Retour à l'accueil</a>
-</div>
+<style>
+    .animate-bounce {
+        animation: bounce 1s infinite;
+    }
+
+    @@keyframes bounce {
+        0%, 20%, 50%, 80%, 100%
+
+    {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+
+    }
+
+    .celebration-emojis {
+        font-size: 2rem;
+        margin: 20px 0;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100%
+
+    {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    }
+
+    .result-stat {
+        padding: 20px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        transition: transform 0.3s ease;
+    }
+
+        .result-stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+    .badge-lg {
+        font-size: 1.2rem;
+        border-radius: 20px;
+    }
+
+    .btn-group-vertical .btn {
+        margin-bottom: 10px;
+    }
+</style>
+
+<script>
+    function shareScore() {
+        const score = @(ViewBag.FinalScore ?? 0);
+        const text = `J'ai obtenu ${score} points au quiz Pokémon sur PokeWare ! 🎮🔥`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Mon score PokeWare',
+                text: text,
+                url: window.location.href
+            });
+        } else {
+            copyToClipboard(text);
+            alert('Score copié dans le presse-papiers !');
+        }
+    }
+
+    function copyScore() {
+        const score = @(ViewBag.FinalScore ?? 0);
+        const text = `J'ai obtenu ${score} points au quiz Pokémon sur PokeWare ! 🎮🔥`;
+        copyToClipboard(text);
+        alert('Score copié dans le presse-papiers !');
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).catch(err => {
+            console.error('Erreur lors de la copie:', err);
+        });
+    }
+
+    // Animation d'entrée
+    document.addEventListener('DOMContentLoaded', function() {
+        const elements = document.querySelectorAll('.result-stat');
+        elements.forEach((el, index) => {
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 200);
+        });
+    });
+</script>
