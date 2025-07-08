@@ -20,7 +20,7 @@ public class BattleService
             throw new NotEnoughPowerPointsException("Not enough power points to use this skill.");
         }
 
-        skill.PowerPoints--;
+        //skill.PowerPoints--;
 
         double typeMultiplier = await TypeChart.GetDamageMultiplierAsync(
             _ctx,

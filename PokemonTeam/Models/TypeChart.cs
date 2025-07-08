@@ -37,29 +37,31 @@ namespace PokemonTeam.Models;
 public class TypeChart
 {
     
-    public int id { get; private set; }
-    public string typeName { get; private set; }
+    public int id { get;  set; }
+    public string typeName { get;  set; }
     
-    public decimal fire { get; private set; }
+    public decimal fire { get;  set; }
     
-    public decimal normal { get; private set; }
-    public decimal water { get; private set; }
-    public decimal grass { get; private set; }
-    public decimal electric { get; private set; }
-    public decimal ice { get; private set; }
-    public decimal fighting { get; private set; }
-    public decimal poison { get; private set; }
-    public decimal ground { get; private set; }
-    public decimal flying { get; private set; }
-    public decimal psychic { get; private set; }
-    public decimal bug { get; private set; }
-    public decimal rock { get; private set; }
-    public decimal ghost { get; private set; }
-    public decimal dragon { get; private set; }
-    public decimal dark { get; private set; }
-    public decimal steel { get; private set; }
-    public decimal fairy { get; private set; }
+    public decimal normal { get;  set; }
+    public decimal water { get;  set; }
+    public decimal grass { get;  set; }
+    public decimal electric { get;  set; }
+    public decimal ice { get;  set; }
+    public decimal fighting { get;  set; }
+    public decimal poison { get;  set; }
+    public decimal ground { get;  set; }
+    public decimal flying { get;  set; }
+    public decimal psychic { get;  set; }
+    public decimal bug { get;  set; }
+    public decimal rock { get;  set; }
+    public decimal ghost { get;  set; }
+    public decimal dragon { get;  set; }
+    public decimal dark { get;  set; }
+    public decimal steel { get;  set; }
+    public decimal fairy { get;  set; }
     
+    
+    public TypeChart() {}
     
      private static readonly IReadOnlyDictionary<string, Func<TypeChart, decimal>> _col =
             new Dictionary<string, Func<TypeChart, decimal>>(StringComparer.OrdinalIgnoreCase)

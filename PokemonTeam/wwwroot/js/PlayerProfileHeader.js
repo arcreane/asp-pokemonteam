@@ -20,11 +20,13 @@ document.getElementById('logout-btn').addEventListener('click', async () => {
     window.location.href = '/';
 });
 
+console.log(game);
 // ✅ Promesse globale pour garantir que le Player existe AVANT le reste
 var playerReady = new Promise((resolve, reject) => {
-
+    console.log(playerReady)
+    console.log(game)
     if (typeof game !== 'undefined' && game) {
-
+        
         fetch('/auth/check', { credentials: 'include' })
             .then(res => res.ok ? res.json() : Promise.reject('Not logged'))
             .then(async data => {
@@ -66,6 +68,7 @@ var playerReady = new Promise((resolve, reject) => {
             });
 
     } else {
+        console.log("Aucun jeu actif, pas de Player à charger.");
         resolve(); // pas de jeu actif
     }
 

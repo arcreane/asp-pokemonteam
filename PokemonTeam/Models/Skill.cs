@@ -43,21 +43,21 @@ namespace PokemonTeam.Models
 
         [Required]
         [MaxLength(50)]
-        public string Name { get; private set; } = string.Empty;
+        public string Name { get;  set; } = string.Empty;
 
         [Required]
         [Column("fk_type")]
-        public int fk_type { get; private set; }
+        public int fk_type { get;  set; }
 
         [Required]
-        public short Damage { get; private set; }
+        public short Damage { get;  set; }
 
         [Required]
         [Column("power_point")]
         public short PowerPoints { get; set; }
 
         [Required]
-        public short Accuracy { get; private set; }
+        public short Accuracy { get;  set; }
 
         // Propriété de navigation vers TypeChart
         [ForeignKey("fk_type")]
@@ -70,7 +70,7 @@ namespace PokemonTeam.Models
         public ICollection<Pokemon> Pokemons { get; set; } = new List<Pokemon>();
 
         // Constructeur sans paramètres pour EF
-        protected Skill() { }
+        public Skill() { }
 
         public Skill(string name, int typeId, short damage, short powerPoints, short accuracy)
         {

@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Boutique – PokéRogue";
+}
+
+<!-- =====================  Header joueur  ====================== -->
+<div id="player-summary" class="mb-3"><!-- rempli par playerInfo.js --></div>
+
+<!-- =====================  Boutique  =========================== -->
+<section id="shop">
+
+    <!-- --- Équipe (charge depuis la save locale) --------------- -->
+    <div id="player-team" class="mb-4"></div>
+
+    <!-- --- Articles du shop ----------------------------------- -->
+    <h2>Boutique Pokémon</h2>
+    <div id="shop-items"></div>
+
+    <!-- --- Inventaire perso ----------------------------------- -->
+    <h3 class="mt-4">Ton inventaire</h3>
+    <div id="player-items"></div>
+
+    <!-- --- Bouton retour combat -------------------------------- -->
+    <div class="text-center mt-4">
+        <a href="/PokeRogue/Combat" class="btn btn-lg btn-success">
+            🔁 Retour au combat
+        </a>
+    </div>
+</section>
+
+<!-- =====================  Scripts  ============================ -->
+@section Scripts {
+
+    <!-- Constante *game* utilisée dans PlayerProfileHeader / shop.js -->
+    <script>const game = "pokeRogue";</script>
+
+    <!-- 1) Auth + promesse playerReady -->
+    <script src="~/js/PlayerProfileHeader.js"></script>
+
+    <!-- 2) Affiche le résumé (xp / $) dans #player-summary -->
+    <script src="~/js/PokeRogue/playerInfo.js"></script>
+
+    <!-- 3) Logique de boutique  -->
+    <script src="~/js/PokeRogue/shop.js"></script>
+}
+
+<!-- =====================  Styles  ============================= -->
+<style>
+    /* ------ zone équipe ------ */
+    #player-team{
+        background:#f8f8f8; border:1px solid #ddd; border-radius:10px;
+        padding:1rem;
+    }
+    .pokemon-entry{font-size:.9rem;}
+
+    /* ------ boutique / inventaire ------ */
+    .shop-entry,.inv-entry{margin-bottom:.5rem;}
+
+    /* ------ pop-up de soin ------ */
+    .popup-overlay{
+        position:fixed; inset:0; background:#0008;
+        display:flex; align-items:center; justify-content:center; z-index:1000;
+    }
+    .popup-box{
+        background:#fff; padding:1rem 2rem; border-radius:8px;
+        max-width:320px; width:90%; text-align:center;
+    }
+    .pk-choice-btn,.cancel-btn{
+        display:block; width:100%; margin:.25rem 0; padding:.5rem;
+    }
+    .cancel-btn{background:#ccc;}
+</style>

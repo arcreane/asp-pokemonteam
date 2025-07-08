@@ -1,6 +1,7 @@
 @{
-    ViewData["Title"] = "Combat - PokéRogue";
+ViewData["Title"] = "Combat - PokéRogue";
 }
+<div id="player-summary"></div>
 
 <h2>Combat</h2>
 
@@ -21,8 +22,9 @@
 <!-- Zone d'action -->
 <div class="battle-actions mt-4">
     <h4>Actions</h4>
+    <div id="skillsPanel" class="mb-2"></div>
     <div id="actionPanel">
-        <!-- Ici on pourra générer les boutons d'attaques -->
+        <!-- boutons générés dynamiquement -->
     </div>
 </div>
 
@@ -33,8 +35,13 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/PlayerProfileHeader.js"></script>
-    <script src="~/js/PokeRogue/Combat.js"></script>
+    <script>
+        window.game = "pokeRogue";
+    </script>
+<script src="~/js/PlayerProfileHeader.js"></script>
+    <script src="~/js/PokeRogue/playerInfo.js"></script>
+
+<script src="~/js/PokeRogue/Combat.js"></script>
 }
 
 <style>
@@ -51,6 +58,10 @@
         text-align: center;
         background-color: white;
         box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .pokemon-card.active {
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
     }
     .battle-log {
         border: 1px solid #eee;
