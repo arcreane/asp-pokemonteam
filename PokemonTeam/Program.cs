@@ -8,7 +8,18 @@ using PokemonTeam.Models;
 using PokemonTeam.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+// Pour stocker l'état du quiz en session mémoire
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    // durée de session par défaut
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
 
+// Permet l’injection de IHttpContextAccessor dans vos contrôleurs
+builder.Services.AddHttpContextAccessor();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -83,6 +94,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseSession();
 
 app.UseRouting();
 
