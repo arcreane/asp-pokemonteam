@@ -1,0 +1,77 @@
+@{
+ViewData["Title"] = "Combat - PokéRogue";
+}
+<div id="player-summary"></div>
+
+<h2>Combat</h2>
+<!-- Compteur de vagues -->
+<div id="wave-counter" class="alert alert-info small text-center mb-3">
+    Combat n° <span id="wave-count">0</span>
+</div>
+
+<div class="row">
+    <!-- Équipe joueur -->
+    <div class="col-md-6">
+        <h3>Votre équipe</h3>
+        <div id="playerTeam" class="team-panel"></div>
+    </div>
+
+    <!-- Équipe ennemie -->
+    <div class="col-md-6">
+        <h3>Équipe adverse</h3>
+        <div id="enemyTeam" class="team-panel"></div>
+    </div>
+</div>
+
+<!-- Zone d'action -->
+<div class="battle-actions mt-4">
+    <h4>Actions</h4>
+    <div id="skillsPanel" class="mb-2"></div>
+    <div id="actionPanel">
+        <!-- boutons générés dynamiquement -->
+    </div>
+</div>
+
+<!-- Historique -->
+<div class="battle-log mt-4">
+    <h4>Journal de combat</h4>
+    <div id="battleLog"></div>
+</div>
+
+@section Scripts {
+    <script>
+        window.game = "pokeRogue";
+    </script>
+<script src="~/js/PlayerProfileHeader.js"></script>
+    <script src="~/js/PokeRogue/playerInfo.js"></script>
+
+<script src="~/js/PokeRogue/Combat.js"></script>
+}
+
+<style>
+    .team-panel {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .pokemon-card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 0.5rem;
+        width: 150px;
+        text-align: center;
+        background-color: white;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    }
+    .pokemon-card.active {
+        border-color: #007bff;
+        box-shadow: 0 0 5px #007bff;
+    }
+    .battle-log {
+        border: 1px solid #eee;
+        min-height: 100px;
+        padding: 0.5rem;
+        background-color: #f9f9f9;
+        overflow-y: auto;
+    }
+</style>

@@ -24,6 +24,8 @@ public class PokemonDbContext : DbContext
     // put here the next tables
     public DbSet<Skill> Skills {  get; set; }
     
+    public DbSet<Pokemon> Pokemons { get; set; }
+    
     public DbSet<TypeChart> TypeChart { get; set; }
     public DbSet<Player> Players { get; set; }
     public DbSet<Item> Items { get; set; }
@@ -33,6 +35,7 @@ public class PokemonDbContext : DbContext
         modelBuilder.Entity<UserAuthModel>().ToTable("user_auth");
         modelBuilder.Entity<Item>().ToTable("object");
         modelBuilder.Entity<Skill>().ToTable("skill");
+        modelBuilder.Entity<Pokemon>().ToTable("pokemon");
         modelBuilder.Entity<TypeChart>().ToTable("type");
         modelBuilder.Entity<Player>().ToTable("player");
 
@@ -57,7 +60,56 @@ public class PokemonDbContext : DbContext
                     .HasForeignKey("fk_player")
                     .HasConstraintName("FK_player_object_player")
             );
-
+        
+        modelBuilder.Entity<Player>()
+            .HasMany(p => p.Pokemons)
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>(
+                "player_pokemon",
+                j => j
+                    .HasOne<Pokemon>()
+                    .WithMany()
+                    .HasForeignKey("fk_pokemon")
+                    .HasConstraintName("FK_player_pokemon_pokemon"),
+                j => j
+                    .HasOne<Player>()
+                    .WithMany()
+                    .HasForeignKey("fk_player")
+                    .HasConstraintName("FK_player_pokemon_player")
+            );
+        
+        modelBuilder.Entity<Pokemon>()
+            .HasMany(p => p.Types)
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>(
+                "pokemon_type",
+                j => j
+                    .HasOne<TypeChart>()
+                    .WithMany()
+                    .HasForeignKey("fk_type")
+                    .HasConstraintName("FK_pokemon_type_type"),
+                j => j
+                    .HasOne<Pokemon>()
+                    .WithMany()
+                    .HasForeignKey("fk_pokemon")
+                    .HasConstraintName("FK_pokemon_type_pokemon")
+            );
+        
+        modelBuilder.Entity<Pokemon>()
+            .HasMany(p => p.Skill)
+            .WithMany(s => s.Pokemons)
+            .UsingEntity<Dictionary<string, object>>(
+                "pokemon_skill",
+                j => j
+                    .HasOne<Skill>()
+                    .WithMany()
+                    .HasForeignKey("fk_skill")
+                    .HasConstraintName("FK_pokemon_skill_skill"),
+                j => j
+                    .HasOne<Pokemon>()
+                    .WithMany()
+                    .HasForeignKey("fk_pokemon")
+                    .HasConstraintName("FK_pokemon_skill_pokemon")
+            );
     }
-
 }

@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Accueil - PokéRogue";
+}
+
+<div class="text-center">
+    <h1>Bienvenue dans PokéRogue</h1>
+    <p>Préparez votre équipe et affrontez des dresseurs redoutables !</p>
+
+    <a id="new-game-btn" class="btn btn-primary" href="/PokeRogue/SelectTeam">
+        Commencer une nouvelle aventure
+    </a>
+
+    <!-- Section affichée uniquement si une sauvegarde existe -->
+    <div id="save-panel" class="mt-4" style="display:none;">
+        <h4>Sauvegarde détectée</h4>
+        <div id="team-preview" class="d-flex flex-wrap justify-content-center gap-2 mb-3"></div>
+
+        <button id="load-btn"  class="btn btn-success me-2">Charger la partie</button>
+        <button id="reset-btn" class="btn btn-outline-danger">Supprimer la sauvegarde</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    const game = "pokeRogue";
+    </script>
+    <script src="~/js/PokeRogue/index.js"></script>    
+    <script src="~/js/PlayerProfileHeader.js"></script>
+<script src="~/js/PokeRogue/playerInfo.js"></script>
+    
+    
+}
+
+<style>
+    .pokemon-card{
+        width: 140px;
+        border: 1px solid #ccc;
+        background:#fff;
+        text-align:center;
+        font-size:.9rem;
+    }
+</style>

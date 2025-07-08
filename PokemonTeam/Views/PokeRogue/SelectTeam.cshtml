@@ -1,0 +1,39 @@
+@{
+ViewData["Title"] = "Sélection de l'équipe";
+}
+
+<div id="player-summary"></div>
+<div class="container">
+    <h2>Sélectionnez vos Pokémon</h2>
+
+    <div id="pokemon-list" class="d-flex flex-wrap gap-3"></div>
+
+    <button id="validate-team" class="btn btn-primary mt-3">
+        Valider mon équipe
+    </button>
+</div>
+
+@section Scripts {
+    <script>
+    window.game = "pokeRogue";
+    </script>
+<script src="~/js/PlayerProfileHeader.js"></script>
+<script src="~/js/PokeRogue/playerInfo.js"></script>
+    
+<script src="~/js/PokeRogue/SelectTeam.js"></script>
+}
+
+<style>
+
+    .pokemon-card{
+        position:relative; width:150px; padding:.5rem; text-align:center;
+        border:1px solid #ddd; border-radius:.5rem; cursor:pointer; background:#fff;
+        transition:transform .1s;
+    }
+    .pokemon-card:hover:not(.locked){ transform:scale(1.04); }
+    .selected{ outline:3px solid #0d6efd; }
+    .locked{ opacity:.35; pointer-events:none; }
+    .lock-badge{ position:absolute; top:4px; right:4px; font-size:.75rem; }
+    .poke-img{ width:96px; height:96px; }
+
+</style>

@@ -19,16 +19,16 @@ namespace PokemonTeam.Models
     ///     <description><see cref="Name"/>: The name of the skill (string).</description>
     ///   </item>
     ///   <item>
-    ///     <description><see cref="Type"/>: The type of the skill (string).</description>
+    ///     <description><see cref="fk_type"/>: The foreign key to the type table.</description>
     ///   </item>
     ///   <item>
-    ///     <description><see cref="Damage"/>: The damage inflicted (int).</description>
+    ///     <description><see cref="Damage"/>: The damage inflicted (short).</description>
     ///   </item>
     ///   <item>
-    ///     <description><see cref="PowerPoints"/>: The number of power points (int).</description>
+    ///     <description><see cref="PowerPoints"/>: The number of power points (short).</description>
     ///   </item>
     ///   <item>
-    ///     <description><see cref="Accuracy"/>: The accuracy of the skill (int).</description>
+    ///     <description><see cref="Accuracy"/>: The accuracy of the skill (short).</description>
     ///   </item>
     /// </list>
     /// </remarks>
@@ -43,29 +43,39 @@ namespace PokemonTeam.Models
 
         [Required]
         [MaxLength(50)]
-        public string Name { get; private set; } = string.Empty;
+        public string Name { get;  set; } = string.Empty;
 
         [Required]
-        [MaxLength(20)]
-        public string Type { get; private set; } = string.Empty;
+        [Column("fk_type")]
+        public int fk_type { get;  set; }
 
         [Required]
-        public int Damage { get; private set; }
+        public short Damage { get;  set; }
 
         [Required]
         [Column("power_point")]
-        public int PowerPoints { get; set; }
+        public short PowerPoints { get; set; }
 
         [Required]
-        public int Accuracy { get; private set; }
+        public short Accuracy { get;  set; }
+
+        // Propriété de navigation vers TypeChart
+        [ForeignKey("fk_type")]
+        public virtual TypeChart? TypeChart { get; set; }
+
+        // Propriété calculée pour obtenir le nom du type
+        [NotMapped]
+        public string Type => TypeChart?.typeName ?? "Unknown";
+        
+        public ICollection<Pokemon> Pokemons { get; set; } = new List<Pokemon>();
 
         // Constructeur sans paramètres pour EF
-        protected Skill() { }
+        public Skill() { }
 
-        public Skill(string name, string type, int damage, int powerPoints, int accuracy)
+        public Skill(string name, int typeId, short damage, short powerPoints, short accuracy)
         {
             Name = name;
-            Type = type;
+            fk_type = typeId;
             Damage = damage;
             PowerPoints = powerPoints;
             Accuracy = accuracy;
@@ -123,14 +133,14 @@ namespace PokemonTeam.Models
         /// </summary>
         /// <param name="amount">Quantité de PP à restaurer. Si null, restaure au maximum.</param>
         /// <returns>Nombre de PP après restauration.</returns>
-        public int RestorePowerPoints(int? amount = null)
+        public short RestorePowerPoints(short? amount = null)
         {
             // Si amount est null, on restaure au maximum (valeur par défaut pour un Éther max)
-            int maxPP = 10; // Valeur par défaut pour un PP Max
+            short maxPP = 10; // Valeur par défaut pour un PP Max
             
             if (amount.HasValue)
             {
-                PowerPoints = Math.Min(maxPP, PowerPoints + amount.Value);
+                PowerPoints = (short)Math.Min(maxPP, PowerPoints + amount.Value);
             }
             else
             {
@@ -149,7 +159,9 @@ namespace PokemonTeam.Models
         /// <returns>Liste de toutes les compétences.</returns>
         public static async Task<IEnumerable<Skill>> GetAllAsync(PokemonDbContext context)
         {
-            return await context.Skills.ToListAsync();
+            return await context.Skills
+                .Include(s => s.TypeChart)
+                .ToListAsync();
         }
         
         /// <summary>
@@ -158,9 +170,11 @@ namespace PokemonTeam.Models
         /// <param name="id">Identifiant de la compétence.</param>
         /// <param name="context">Contexte de base de données.</param>
         /// <returns>La compétence si trouvée, sinon null.</returns>
-        public static async Task<Skill> GetByIdAsync(int id, PokemonDbContext context)
+        public static async Task<Skill?> GetByIdAsync(int id, PokemonDbContext context)
         {
-            return await context.Skills.FindAsync(id);
+            return await context.Skills
+                .Include(s => s.TypeChart)
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
         
         /// <summary>
@@ -171,9 +185,6 @@ namespace PokemonTeam.Models
         /// <returns>La compétence créée.</returns>
         public static async Task<Skill> CreateAsync(Skill skill, PokemonDbContext context)
         {
-            // Vérification que le type est valide pourrait être ajoutée ici, 
-            // par exemple en vérifiant qu'il est dans une liste de types autorisés
-            
             context.Skills.Add(skill);
             await context.SaveChangesAsync();
             return skill;
@@ -192,8 +203,6 @@ namespace PokemonTeam.Models
             {
                 return false;
             }
-            
-            // Vérification que le type est valide pourrait être ajoutée ici
             
             context.Entry(skill).State = EntityState.Modified;
             
@@ -251,48 +260,55 @@ namespace PokemonTeam.Models
         /// </summary>
         /// <param name="attacker">Le Pokémon attaquant.</param>
         /// <param name="target">Le Pokémon cible.</param>
-        /// <param name="typeChartService">Service pour obtenir les multiplicateurs de type.</param>
+        /// <param name="ctx">Le DbContext pour le calcul des multiplicateurs de type.</param>
         /// <returns>Le résultat de l'utilisation de la compétence.</returns>
         /// <exception cref="NotEnoughPowerPointsException">Si la compétence n'a plus de PP.</exception>
         /// <exception cref="ArgumentNullException">Si un des paramètres est nul.</exception>
-        public async Task<UseSkillResponse> UseInBattle(Pokemon attacker, Pokemon target, PokemonTeam.Services.ITypeChartService typeChartService)
+        public async Task<UseSkillResponse> UseInBattle(
+            Pokemon attacker,
+            Pokemon target,
+            PokemonDbContext ctx)
         {
             if (attacker == null)
                 throw new ArgumentNullException(nameof(attacker), "L'attaquant ne peut pas être nul.");
-                
+
             if (target == null)
                 throw new ArgumentNullException(nameof(target), "La cible ne peut pas être nulle.");
-                
-            if (typeChartService == null)
-                throw new ArgumentNullException(nameof(typeChartService), "Le service de type ne peut pas être nul.");
-            
-            // Utilisation de la compétence (réduit les PP)
+
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx), "Le contexte est nul.");
+
+            // Consomme PP
             this.Use();
-            
-            // Déterminer si l'attaque touche sa cible
+
+            // Vérifier précision
             if (!this.HitsTarget())
             {
-                // L'attaque a manqué sa cible
                 return new UseSkillResponse(0, target);
             }
-            
-            // Utiliser directement le type de la compétence (string)
-            string skillType = Type.ToLowerInvariant(); // Normaliser pour correspondre au format attendu
-            
-            // Calculer le multiplicateur de type basé sur les types de la cible
-            decimal typeMultiplier = await typeChartService.Multiplier(skillType, target.types.ToArray());
-            
-            // Calculer les dégâts
+
+            // type attaque
+            string skillType = this.Type;
+
+            decimal typeMultiplier = 1.0m;
+
+            if (target.Types != null && target.Types.Any())
+            {
+                typeMultiplier = (decimal)await TypeChart.GetDamageMultiplierAsync(
+                    ctx,
+                    skillType,
+                    target.Types.Select(t => t.typeName).ToArray()
+                );
+            }
+
             int damageDealt = this.CalculateDamage(
                 attacker.strength,
                 target.defense,
                 typeMultiplier
             );
-            
-            // Appliquer les dégâts à la cible
-            target.healthPoint = Math.Max(0, target.healthPoint - damageDealt);
-            
-            // Retourner la réponse
+
+            target.healthPoint = (short)Math.Max(0, target.healthPoint - damageDealt);
+
             return new UseSkillResponse(damageDealt, target);
         }
         
