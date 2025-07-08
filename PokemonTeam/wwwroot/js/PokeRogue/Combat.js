@@ -44,8 +44,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     await addSprites([...playerTeam, ...enemyTeam]);
 
     /* ------------------- 3. Variables de combat --------------------------- */
-    let currentPlayer = playerTeam[0];
-    let currentEnemy  = enemyTeam[0];
+    const firstAlive = team => team.find(p => p.healthPoint > 0) ?? team[0];
+    let currentPlayer = firstAlive(playerTeam); // 🆕
+    let currentEnemy  = firstAlive(enemyTeam);  // (par sécurité)
+
+    let waveCount = 0;
 
 
     /* Raccourcis DOM */
@@ -58,23 +61,25 @@ window.addEventListener("DOMContentLoaded", async () => {
     const saveGame = () => {
         const data = {
             team : playerTeam.map(p => ({
-                name         : p.name,
-                healthPoint  : p.healthPoint,
-                maxHealthPoint: p.maxHealthPoint,
-                skills       : [...p.skills],     // on copie le tableau
-                types        : [...p.types],
-                sprite       : p.sprite           // pratique pour éviter un 2ᵉ appel PokeAPI
+                name            : p.name,
+                healthPoint     : p.healthPoint,
+                maxHealthPoint  : p.maxHealthPoint,
+                skills          : [...p.skills],
+                types           : [...p.types],
+                sprite          : p.sprite
             })),
-            enemy: {
-                name          : currentEnemy.name,
-                healthPoint   : currentEnemy.healthPoint,
-                maxHealthPoint: currentEnemy.maxHealthPoint,
-                sprite        : currentEnemy.sprite
-            }
-            // tu peux rajouter d’autres champs si besoin (argent, xp, tour, etc.)
+            enemy : {
+                name            : currentEnemy.name,
+                healthPoint     : currentEnemy.healthPoint,
+                maxHealthPoint  : currentEnemy.maxHealthPoint,
+                sprite          : currentEnemy.sprite
+            },
+            /* 🆕  Compteur de vagues */
+            waveCount
         };
+
         localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-        console.log("💾 Sauvegarde complète effectuée");
+        console.log(`💾 Sauvegarde effectuée (vagues : ${waveCount})`);
     };
 
     /* ------------------------------------------------------------------
@@ -82,7 +87,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     ------------------------------------------------------------------ */
     const loadGame = () => {
         const raw = localStorage.getItem(SAVE_KEY);
-        console.log(raw);
         if (!raw) return;
 
         try {
@@ -91,10 +95,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             /* --- Player team --- */
             save.team.forEach(stored => {
                 const poke = playerTeam.find(p => p.name === stored.name);
-                console.log(poke)
-                if (poke) {
-                    Object.assign(poke, stored);   // copie toutes les propriétés
-                }
+                if (poke) Object.assign(poke, stored);
             });
 
             /* --- Enemy --- */
@@ -103,13 +104,26 @@ window.addEventListener("DOMContentLoaded", async () => {
                 if (e) Object.assign(e, save.enemy), currentEnemy = e;
             }
 
-            console.log("✅ Sauvegarde complète restaurée");
+            /* 🆕  Restaure le nombre de vagues */
+            waveCount = save.waveCount ?? 0;
+
+            console.log("✅ Sauvegarde restaurée (vagues :", waveCount, ")");
         } catch (err) {
             console.warn("Sauvegarde corrompue :", err);
         }
     };
-    
+
+    /* Affiche le compteur dans le DOM */
+    const renderWave = () => {
+        const el = document.getElementById("wave-count");
+        if (el) el.textContent = waveCount;
+    };
+
+
     loadGame() /* ← restaure les stats si une sauvegarde existe */
+    currentPlayer = firstAlive(playerTeam);
+    currentEnemy  = firstAlive(enemyTeam);
+    renderWave();        // 🆕 affiche la valeur restaurée
 
     /* ------------------- 5. Rendu ----------------------------------------- */
     function renderTeams() {
@@ -201,14 +215,16 @@ window.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        
-        enemyCounter();
-        renderTeams(); 
-        saveGame();
+
+        const isGameOver = await enemyCounter();  // ← on attend la fin
+        if (isGameOver) return;                   // stoppe tout
+
+        renderTeams();    // mise à jour visuelle
+        saveGame();       // persiste l’état
     }
 
     /* ------------------- 7. Contre-attaque ennemie ------------------------ */
-    function enemyCounter() {
+    async function enemyCounter() {
         const dmg = Math.floor(Math.random()*8)+5;
         currentPlayer.healthPoint = Math.max(0, currentPlayer.healthPoint-dmg);
         log(`<span style="color:red">${currentEnemy.name}</span> inflige ${dmg} dégâts à ${currentPlayer.name}`);
@@ -220,17 +236,32 @@ window.addEventListener("DOMContentLoaded", async () => {
                 currentPlayer = next;
                 log(`🟠 Vous envoyez ${next.name}`);
                 renderSkills();
+                return false
             } else {
                 log(`<strong style="color:red">Défaite…</strong>`);
+                localStorage.removeItem("playerTeam"); // 🆕  supprime l’équipe
+                localStorage.removeItem(SAVE_KEY); // 🆕  supprime la sauvegarde
+                await fetch("/PokeRogue/EndMatch", {
+                    method : "POST",
+                    headers: { "Content-Type":"application/json" },
+                    body   : JSON.stringify(enemyTeam.map(e => e.name))
+                });
+                
                 $skillsPanel.innerHTML = "";
+                alert("Tous vos Pokémon sont K.O.\nRetour à l’écran d’accueil.");
+                window.location.href = "/PokeRogue";
+                return true;           // 🔴 partie terminée
             }
         }
+        return false
     }
 
     /* ------------------- 8. Victoire -------------------------------------- */
     async function victorySequence() {
         log(`<strong style="color:green">Victoire ! Tous les ennemis K.O.</strong>`);
-
+        renderWave();        // 🆕 affiche la valeur restaurée
+        waveCount++;                 // 🆕  +1 vague réussie
+        saveGame();                  // on sauvegarde immédiatement
         /* Récompense */
         const gain = { Pokedollar:20, Experience:10, Game:"pokerogue" };
         try {
@@ -271,7 +302,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
         return arr;
     }
-
+    
+    
     async function addSprites(list) {
         await Promise.all(list.map(async p => {
             try {
