@@ -100,6 +100,7 @@ async function useItem(itemId) {
             alert(`✅ Potion utilisée ! Boost de vitesse : +${boost}`);
 
             await loadInventory();
+            await loadPlayer();
         } else {
             const msg = await res.text();
             alert('❌ Erreur : ' + msg);
