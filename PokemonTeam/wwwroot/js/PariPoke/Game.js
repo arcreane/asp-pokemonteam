@@ -7,10 +7,12 @@ const paths = [
     document.getElementById('trackPath4')
 ];
 
-// Longueurs de base des pistes
 const baseLengths = paths.map(p => p.getTotalLength());
-const minLength = Math.min(...baseLengths); // Couloir le plus court
+const minLength = Math.min(...baseLengths);
 const track = document.getElementById('raceContainer');
+
+const RUNNER_SIZE = 40; // Doit matcher ton CSS .runner-wrapper
+const RUNNER_OFFSET = RUNNER_SIZE / 2;
 
 document.getElementById('startRace').addEventListener('click', async () => {
     if (selectedRunners.length !== 4) {
@@ -35,7 +37,6 @@ document.getElementById('startRace').addEventListener('click', async () => {
     console.log(`✅ Pari sur : ${selectedPokemon}, mise : ${betAmount} pokédollars`);
     console.log(`🔁 Nombre de tours : ${numRounds}`);
 
-    // Débite le pari
     try {
         const betRes = await fetch('/PariPoke/bet', {
             method: 'POST',
@@ -57,13 +58,10 @@ document.getElementById('startRace').addEventListener('click', async () => {
         return;
     }
 
-    // Nettoyer la piste
     track.querySelectorAll('.runner-wrapper, .preview-runner').forEach(el => el.remove());
 
     const runners = [];
     const totalLengths = baseLengths.map(l => l * numRounds);
-
-    // ➜ Correction : calcul du décalage de départ pour chaque couloir
     const startOffsets = baseLengths.map(length => length - minLength);
 
     for (let i = 0; i < selectedRunners.length; i++) {
@@ -109,12 +107,10 @@ document.getElementById('startRace').addEventListener('click', async () => {
             hpFill
         });
 
-        // ➜ Position de départ ajustée avec décalage
         const point = paths[i].getPointAtLength(startOffsets[i]);
-        wrapper.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
+        wrapper.style.transform = `translate(${point.x - RUNNER_OFFSET}px, ${point.y - RUNNER_OFFSET}px)`;
     }
 
-    // ➜ Steps commencent à l'offset
     const steps = [...startOffsets];
     let winnerIndex = -1;
 
@@ -135,7 +131,7 @@ document.getElementById('startRace').addEventListener('click', async () => {
 
             const distance = steps[i] % baseLengths[i];
             const point = paths[i].getPointAtLength(distance);
-            runners[i].wrapper.style.transform = `translate(${point.x - 25}px, ${point.y - 25}px)`;
+            runners[i].wrapper.style.transform = `translate(${point.x - RUNNER_OFFSET}px, ${point.y - RUNNER_OFFSET}px)`;
 
             if (steps[i] >= totalLengths[i] && winnerIndex === -1) {
                 winnerIndex = i;
