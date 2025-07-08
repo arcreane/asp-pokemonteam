@@ -199,7 +199,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         }
 
         const data = await res.json();
-        currentEnemy.healthPoint = data.targetRemainingHP;
+        currentEnemy.healthPoint = Math.max(0, data.targetRemainingHP);
         log(`💥 ${data.damage} dégâts infligés à ${data.targetName}`);
 
         /* KO ? */
@@ -210,6 +210,7 @@ window.addEventListener("DOMContentLoaded", async () => {
                 currentEnemy = next;
                 log(`L'ennemi envoie ${next.name} !`);
             } else {
+                renderTeams();    // mise à jour visuelle
                 await victorySequence();
                 return;
             }

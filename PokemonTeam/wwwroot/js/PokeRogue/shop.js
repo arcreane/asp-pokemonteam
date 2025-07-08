@@ -25,12 +25,11 @@ window.addEventListener("DOMContentLoaded", () => {
     playerReady            // promesse globale définie dans PlayerProfileHeader.js
         .then(() => {
             console.log("✅ Player prêt pour la boutique");
-
+            loadPlayerSummary(game);
             loadShop();            // liste des objets dispo
             loadPlayer();          // solde pokédollars / xp
             loadInventory();       // inventaire perso
             renderTeamInShop();    // affichage de la team pour info
-            loadPlayerSummary(game);
         })
         .catch(err => {
             console.error("Erreur playerReady :", err);
@@ -59,7 +58,7 @@ async function loadShop() {
             shopDiv.insertAdjacentHTML(
                 "beforeend",
                 `<div class="shop-entry">
-                    <strong>${item.name}</strong> – ${item.price}💰 – ${healTxt}
+                    <strong>${item.name}</strong> – ${item.price} PokeDollars – ${healTxt}
                     <button class="buy-btn" data-id="${item.id}">Acheter</button>
                  </div>`
             );
@@ -94,9 +93,8 @@ async function buyItem(itemId) {
         }
 
         alert("✅ Objet acheté !");
-        await loadPlayer();      // MAJ du solde
-        await loadInventory();   // MAJ inventaire
-
+        loadPlayer();      // MAJ du solde
+        loadInventory();   // MAJ inventaire
     } catch (err) {
         console.error("buyItem:", err);
     }
@@ -112,7 +110,6 @@ async function loadPlayer() {
         if (!res.ok) throw new Error("Pas de player");
 
         const player = await res.json();
-        document.getElementById("player-balance").textContent = player.pokedollar;
 
         loadPlayerSummary(game);     // petit bloc « XP / $ » (partial)
     } catch {
@@ -259,7 +256,7 @@ function renderTeamInShop() {
     const team = Array.isArray(save) ? save : save.team;
     if (!Array.isArray(team)) { container.innerHTML = "<em>Sauvegarde invalide.</em>"; return; }
 
-    container.innerHTML = "<h4>🎮 Votre équipe</h4>";
+    container.innerHTML = "<h4>Votre équipe</h4>";
     team.forEach(p => {
         container.insertAdjacentHTML(
             "beforeend",
