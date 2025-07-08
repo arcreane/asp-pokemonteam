@@ -1,0 +1,61 @@
+@using PokemonTeam.Models
+@model List<Item>
+@{
+    ViewData["Title"] = "Boutique";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int balance = ViewBag.Pokedollars ?? 0;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3 text-center">Boutique</h2>
+    <p class="text-center">Solde : <strong>@balance</strong> Pokédollars</p>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <strong>@item.Name</strong> - @item.Price Pokédollars
+                    </div>
+                    <div class="card-body">
+                        <p>@GetItemDescription(item.Name)</p>
+                        <form asp-action="BuyItem" method="post">
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary" @(balance >= item.Price ? "" : "disabled")>
+                                Acheter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-3">
+        <a class="btn btn-secondary" asp-action="Question">Retour au quiz</a>
+    </div>
+</div>
+
+@functions{
+    private string GetItemDescription(string name)
+    {
+        return name switch
+        {
+            "Potion" => "Restaure l'une de tes vies.",
+            "Super Potion" => "Ajoute 10 points à ton score.",
+            "Hyper Potion" => "Ajoute 20 points à ton score.",
+            "Max Potion" => "Restaure toutes tes vies.",
+            _ => "Objet mystérieux"
+        };
+    }
+}
