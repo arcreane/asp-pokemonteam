@@ -36,6 +36,9 @@ public class TypeChart
     
     public int id { get; private set; }
     public string typeName { get; private set; }
+    // Some views or services expect a property named "Name". Expose an alias
+    // that maps to <see cref="typeName"/> to avoid compile errors.
+    public string Name => typeName;
     
     public decimal fire { get; private set; }
     
