@@ -4,6 +4,11 @@
     margin: 0 4px;
 }
 
+.life-special {
+    cursor: pointer;
+    animation: bounce-special 0.6s infinite;
+}
+
 .life-alive {
     animation: bounce 1s infinite;
 }
@@ -14,7 +19,42 @@
     opacity: 0.5;
 }
 
+.life-effect {
+    animation: flash 0.4s ease;
+}
+
+.life-effect-normal { box-shadow: 0 0 20px 5px #A8A77A; }
+.life-effect-fire { box-shadow: 0 0 20px 5px #EE8130; }
+.life-effect-water { box-shadow: 0 0 20px 5px #6390F0; }
+.life-effect-electric { box-shadow: 0 0 20px 5px #F7D02C; }
+.life-effect-grass { box-shadow: 0 0 20px 5px #7AC74C; }
+.life-effect-ice { box-shadow: 0 0 20px 5px #96D9D6; }
+.life-effect-fighting { box-shadow: 0 0 20px 5px #C22E28; }
+.life-effect-poison { box-shadow: 0 0 20px 5px #A33EA1; }
+.life-effect-ground { box-shadow: 0 0 20px 5px #E2BF65; }
+.life-effect-flying { box-shadow: 0 0 20px 5px #A98FF3; }
+.life-effect-psychic { box-shadow: 0 0 20px 5px #F95587; }
+.life-effect-bug { box-shadow: 0 0 20px 5px #A6B91A; }
+.life-effect-rock { box-shadow: 0 0 20px 5px #B6A136; }
+.life-effect-ghost { box-shadow: 0 0 20px 5px #735797; }
+.life-effect-dragon { box-shadow: 0 0 20px 5px #6F35FC; }
+.life-effect-dark { box-shadow: 0 0 20px 5px #705746; }
+.life-effect-steel { box-shadow: 0 0 20px 5px #B7B7CE; }
+.life-effect-fairy { box-shadow: 0 0 20px 5px #D685AD; }
+
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
 }
+
+@keyframes bounce-special {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes flash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
