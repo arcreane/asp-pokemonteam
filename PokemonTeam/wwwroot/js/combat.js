@@ -152,10 +152,10 @@ async function generateBalancedEnemy() {
             const pokemonData = await response.json();
             
             // Équilibrer les stats en fonction du niveau du joueur
-            const difficultyMultiplier = 0.8 + (playerLevel * 0.1); // 0.8 à 1.3
+            const difficultyMultiplier = 0.7 + (playerLevel * 0.05); // 0.7 à 1.3
             const variationFactor = 0.9 + (Math.random() * 0.2); // 0.9 à 1.1
             
-            const finalMultiplier = Math.min(1.5, difficultyMultiplier * variationFactor);
+            const finalMultiplier = Math.min(1.2, difficultyMultiplier * variationFactor);
             
             const balancedEnemy = {
                 id: pokemonData.id,
@@ -348,10 +348,10 @@ async function enemyAttack() {
     
     const enemySkill = randomChoice(currentBattle.enemy.skills);
     
-    // Calcul des dégâts
+    // ✅ Un seul calcul de dégâts
     const damage = calculateDamageLocal(currentBattle.enemy, currentBattle.player, enemySkill);
     
-    // Appliquer les dégâts
+    // ✅ Application des dégâts une seule fois
     currentBattle.player.healthPoint -= damage;
     currentBattle.player.healthPoint = Math.max(0, currentBattle.player.healthPoint);
     
@@ -392,11 +392,14 @@ function calculateDamageLocal(attacker, defender, skill) {
     const defenseStat = defender.defense;
     
     // Calcul principal
-    let damage = Math.floor((baseDamage * (attackStat / defenseStat)) * 0.8);
+    let damage = Math.floor((baseDamage * attackStat / defenseStat) / 1500) + 3;
     
     // Facteur aléatoire (85% à 100%)
     const randomFactor = 0.85 + Math.random() * 0.15;
     damage = Math.floor(damage * randomFactor);
+
+    // Dégâts minimum de 1, maximum de 50
+    damage = Math.max(1, Math.min(50, damage));
     
     // Multiplicateur de type
     let typeMultiplier = 1.0;

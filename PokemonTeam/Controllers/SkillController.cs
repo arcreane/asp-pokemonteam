@@ -161,12 +161,12 @@ namespace PokemonTeam.Controllers
         /// <returns>Réponse indiquant les dégâts infligés et l'état de la cible.</returns>
         /// <response code="200">Utilisation réussie de la compétence.</response>
         /// <response code="400">Si la compétence n'a plus de PP ou autre erreur.</response>
+
         [HttpPost("use")]
         public async Task<ActionResult<UseSkillResponse>> UseSkill([FromBody] UseSkillRequest request)
         {
             try
             {
-                // Le modèle Skill contient maintenant cette logique métier
                 var response = await request.Skill.UseInBattle(request.Attacker, request.Target, _typeChartService);
                 return Ok(response);
             }
@@ -190,7 +190,7 @@ namespace PokemonTeam.Controllers
         {
             try
             {
-                // Utilise la méthode statique existante de votre classe Skill
+                // Utilise la méthode statique existante de la classe Skill
                 var skills = await Skill.GetAllAsync(_context);
                 return Ok(skills);
             }
