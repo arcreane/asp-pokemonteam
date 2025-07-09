@@ -1,8 +1,22 @@
 @{
 ViewData["Title"] = "Accueil - PokeRace";
+
 }
-<h2>Mon Jeu</h2>
-<p>Bienvenue dans le jeu ! Choisis un Pokémon et prépare-toi à la course.</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/PariPoke.css" asp-append-version="true" />
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 text-center">
+            <h2>PariPoke</h2>
+            <img class="d-block mx-auto" src="Image/PariPoke-logo.png" width="500" height="500" alt="Logo PariPoke">
+            <p>Bienvenue dans le jeu ! Choisis un Pokémon et prépare-toi à la course.</p>    
+        </div>
+    </div>
+</div>
+
+
 @Html.Partial("_ShopPartial")
 @Html.Partial("_RunnerSelection")
 @Html.Partial("_BetSelection")

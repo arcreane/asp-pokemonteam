@@ -3,37 +3,142 @@ ViewData["Title"] = "Sélection de l'équipe";
 }
 
 <div id="player-summary"></div>
-<div class="container">
-    <h2>Sélectionnez vos Pokémon</h2>
+<div class="container-fluid d-flex flex-column" style="height: 100vh; padding-bottom: 80px;">
+    <h2 class="mb-3">Sélectionnez vos Pokémon</h2>
 
-    <div id="pokemon-list" class="d-flex flex-wrap gap-3"></div>
+    <!-- Section des Pokémon sélectionnés (fixe en haut) -->
+    <div id="selected-pokemon-bar" class="selected-bar bg-light border rounded p-2 mb-3" style="min-height: 60px;">
+        <div class="d-flex align-items-center">
+            <span class="me-2"><strong>Équipe sélectionnée :</strong></span>
+            <div id="selected-pokemon-list" class="d-flex gap-2 flex-wrap">
+                <span class="text-muted">Aucun Pokémon sélectionné</span>
+            </div>
+        </div>
+    </div>
 
-    <button id="validate-team" class="btn btn-primary mt-3">
+    <div id="pokemon-list" class="d-flex flex-wrap gap-3 flex-grow-1 overflow-auto p-3" style="max-height: calc(100vh - 280px);"></div>
+</div>
+
+<!-- Bouton fixe en bas -->
+<div class="fixed-bottom bg-white border-top p-3 text-center">
+    <button id="validate-team" class="btn btn-primary btn-lg">
         Valider mon équipe
     </button>
 </div>
 
 @section Scripts {
-    <script>
-    window.game = "pokeRogue";
-    </script>
+<script>
+    window.game = "pokeRogue";  // ← Ceci pour garder la compatibilité</script>
 <script src="~/js/PlayerProfileHeader.js"></script>
 <script src="~/js/PokeRogue/playerInfo.js"></script>
-    
+
 <script src="~/js/PokeRogue/SelectTeam.js"></script>
 }
 
 <style>
-
-    .pokemon-card{
-        position:relative; width:150px; padding:.5rem; text-align:center;
-        border:1px solid #ddd; border-radius:.5rem; cursor:pointer; background:#fff;
-        transition:transform .1s;
+    body {
+        padding-bottom: 80px; /* Évite que le contenu soit caché par le bouton fixe */
     }
-    .pokemon-card:hover:not(.locked){ transform:scale(1.04); }
-    .selected{ outline:3px solid #0d6efd; }
-    .locked{ opacity:.35; pointer-events:none; }
-    .lock-badge{ position:absolute; top:4px; right:4px; font-size:.75rem; }
-    .poke-img{ width:96px; height:96px; }
 
+    .pokemon-card {
+        position: relative;
+        width: 150px;
+        padding: .5rem;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: .5rem;
+        cursor: pointer;
+        background: #fff;
+        transition: transform .1s;
+        flex-shrink: 0; /* Empêche la compression des cartes */
+    }
+
+    .pokemon-card:hover:not(.locked) {
+        transform: scale(1.04);
+    }
+
+    .selected {
+        outline: 3px solid #0d6efd;
+    }
+
+    .locked {
+        opacity: .35;
+        pointer-events: none;
+    }
+
+    .lock-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: .75rem;
+    }
+
+    .poke-img {
+        width: 96px;
+        height: 96px;
+    }
+
+    /* Amélioration du scroll */
+    #pokemon-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #pokemon-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    #pokemon-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    #pokemon-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Style pour le bouton fixe */
+    .fixed-bottom {
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Styles pour la barre de sélection */
+    .selected-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white !important;
+        border: 2px solid #dee2e6 !important;
+    }
+
+    .selected-pokemon-mini {
+        display: inline-flex;
+        align-items: center;
+        background: #e7f3ff;
+        border: 2px solid #0d6efd;
+        border-radius: 20px;
+        padding: 4px 8px;
+        margin: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.85rem;
+    }
+
+    .selected-pokemon-mini:hover {
+        background: #cce7ff;
+        transform: scale(1.05);
+    }
+
+    .selected-pokemon-mini img {
+        width: 24px;
+        height: 24px;
+        margin-right: 4px;
+    }
+
+    .remove-btn {
+        margin-left: 4px;
+        color: #dc3545;
+        font-weight: bold;
+        cursor: pointer;
+    }
 </style>

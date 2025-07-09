@@ -1,60 +1,130 @@
 @{
-    ViewData["Title"] = "Connexion & Inscription";
+ViewData["Title"] = "Connexion & Inscription";
 }
 
-<h2>Connexion</h2>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <!-- Section Connexion -->
+                    <div class="mb-5">
+                        <h3 class="card-title text-center mb-4">Connexion</h3>
+                        <form>
+                            <div class="mb-3">
+                                <label for="loginEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="loginEmail" placeholder="Votre email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="loginPassword" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" id="loginPassword" placeholder="Votre mot de passe">
+                            </div>
+                            <button type="button" class="btn btn-primary w-100" id="loginBtn">Se connecter</button>
+                        </form>
+                        <div id="loginMsg" class="mt-3"></div>
+                    </div>
 
-    <input id="loginEmail" placeholder="Email" type="email">
-    <input id="loginPassword" placeholder="Mot de passe" type="password">
-    <button id="loginBtn">Se connecter</button>
+                    <hr class="my-4">
 
-    <p id="loginMsg"></p>
+                    <!-- Section Inscription -->
+                    <div>
+                        <h3 class="card-title text-center mb-4">Inscription</h3>
+                        <form>
+                            <div class="mb-3">
+                                <label for="registerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="registerEmail" placeholder="Votre email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerPassword" class="form-label">Mot de passe</label>
+                                <input type="password" class="form-control" id="registerPassword" placeholder="Choisissez un mot de passe">
+                            </div>
+                            <button type="button" class="btn btn-success w-100" id="registerBtn">S'inscrire</button>
+                        </form>
+                        <div id="registerMsg" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <h2>Inscription</h2>
+<script>
+    function showMessage(elementId, message, isError = false) {
+        const element = document.getElementById(elementId);
+        element.innerHTML = isError ?
+            `<div class="alert alert-danger" role="alert">${message}</div>` :
+            `<div class="alert alert-success" role="alert">${message}</div>`;
+    }
 
-    <input id="registerEmail" placeholder="Email" type="email">
-    <input id="registerPassword" placeholder="Mot de passe" type="password">
-    <button id="registerBtn">S'inscrire</button>
-
-    <p id="registerMsg"></p>
-
-    <script>
     document.getElementById('loginBtn').addEventListener('click', async () => {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
-        const res = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+        if (!email || !password) {
+            showMessage('loginMsg', 'Veuillez remplir tous les champs', true);
+            return;
+        }
 
-        if (res.ok) {
-            document.getElementById('loginMsg').innerText = "Connexion réussie !";
-            window.location.href = '/'; // ⏎ redirection vers Home
-        } else {
-            const err = await res.json();
-            document.getElementById('loginMsg').innerText = err || "Erreur";
+        try {
+            const res = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (res.ok) {
+                showMessage('loginMsg', 'Connexion réussie !');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } else {
+                const err = await res.json();
+                showMessage('loginMsg', err || 'Erreur de connexion', true);
+            }
+        } catch (error) {
+            showMessage('loginMsg', 'Erreur de connexion', true);
         }
     });
 
-document.getElementById('registerBtn').addEventListener('click', async () => {
+    document.getElementById('registerBtn').addEventListener('click', async () => {
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
 
-        const res = await fetch('/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-
-        if (res.ok) {
-            document.getElementById('loginMsg').innerText = "Connexion réussie !";
-            window.location.href = '/'; // ⏎ redirection vers Home
-        } else {
-            const err = await res.json();
-            document.getElementById('loginMsg').innerText = err || "Erreur";
+        if (!email || !password) {
+            showMessage('registerMsg', 'Veuillez remplir tous les champs', true);
+            return;
         }
 
-});
+        try {
+            const res = await fetch('/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (res.ok) {
+                showMessage('registerMsg', 'Inscription réussie !');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            } else {
+                const err = await res.json();
+                showMessage('registerMsg', err || 'Erreur d\'inscription', true);
+            }
+        } catch (error) {
+            showMessage('registerMsg', 'Erreur d\'inscription', true);
+        }
+    });
+
+    // Gestion de l'entrée pour soumettre avec Enter
+    document.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            const activeElement = document.activeElement;
+            if (activeElement.id === 'loginEmail' || activeElement.id === 'loginPassword') {
+                document.getElementById('loginBtn').click();
+            } else if (activeElement.id === 'registerEmail' || activeElement.id === 'registerPassword') {
+                document.getElementById('registerBtn').click();
+            }
+        }
+    });
 </script>

@@ -805,3 +805,22 @@ INSERT INTO pokemon_skill (fk_pokemon, fk_skill) VALUES (149, 15);
 INSERT INTO pokemon_skill (fk_pokemon, fk_skill) VALUES (149, 10);
 INSERT INTO pokemon_skill (fk_pokemon, fk_skill) VALUES (150, 11);
 INSERT INTO pokemon_skill (fk_pokemon, fk_skill) VALUES (151, 11);
+
+
+UPDATE pokemon
+SET unlocked_experience = 0
+WHERE fk_evolution IS NOT NULL
+  AND id NOT IN (SELECT fk_evolution FROM pokemon);
+
+UPDATE pokemon
+SET unlocked_experience = 40
+WHERE fk_evolution IS NOT NULL
+  AND id IN (SELECT fk_evolution FROM pokemon);
+
+UPDATE pokemon
+SET unlocked_experience = 80
+WHERE fk_evolution IS NULL;
+
+UPDATE pokemon
+SET unlocked_experience = 120
+WHERE id IN (144, 145, 146, 150, 151);
