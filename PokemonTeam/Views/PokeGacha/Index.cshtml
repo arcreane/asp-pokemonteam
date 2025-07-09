@@ -1,47 +1,68 @@
 @{
-ViewData["Title"] = "PokeGacha";
+ViewData["Title"] = "PokéGacha";
+Layout = null;
 }
-
-<div style="display: flex; height: 100vh;">
-    <!-- gauche -->
-    <div style="flex: 2; padding: 1rem; border-right: 2px solid #ddd;">
-        <h1>POKEGACHA</h1>
-        <h2>Gotta Catch Them All!</h2>
-        <div style="margin-bottom:10px;">
-            <strong>Pokédollars : <span id="pokedollar">-</span></strong><br/>
-            <small>Pull price : 10 pokédollars</small>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéGacha</title>
+    <link rel="stylesheet" href="~/css/pokegacha.css" />
+</head>
+<body>
+<div class="container">
+    <!-- Section gauche -->
+    <div class="left-panel">
+        <div class="logo">
+            <img src="~/Image/pokegacha-logo.png" alt="PokéGacha logo" width="300px"/>
         </div>
-        <button id="draw" style="border:none; background:none;">
-            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" />
+        <h2 class="subtitle">Gotta Catch Them All!</h2>
+
+        <div class="currency-info">
+            <div class="currency-amount">
+                💰 Pokédollars : <span id="pokedollar">-</span>
+            </div>
+            <div class="pull-price">Pull price : 10 pokédollars</div>
+        </div>
+
+        <button id="draw" class="draw-button">
+            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" class="pulse"/>
         </button>
-        <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
-        <div id="result" style="margin-top: 20px;"></div>
+
+        <div class="loading">
+            <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
+        </div>
+
+        <div id="result" class="result"></div>
     </div>
 
-    <!-- droite -->
-    <div style="flex: 1; display: flex; flex-direction: column;">
-        <!-- pokedex -->
-        <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
-            <h3>Pokédex</h3>
-            <div id="pokedexLoading" style="text-align:center;">
-                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" style="width:60px;"/>
+    <!-- Section droite -->
+    <div class="right-panel">
+        <!-- Pokédex -->
+        <div class="pokedex-section">
+            <h3 class="section-title">📚 Pokédex</h3>
+            <div id="pokedexLoading" class="pokedex-loading">
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" />
                 <p>Pokédex is loading...</p>
             </div>
-            <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
+            <div id="pokedexGrid" class="pokedex-grid">
                 <!-- sprites -->
             </div>
         </div>
 
-        <!-- module de combat -->
-        <div id="future" style="flex: 1; padding: 1rem;">
-            <h3>Fighting ring</h3>
-            <p>You can fight to try to win 5 pokédollars, but if you lose, you have 10% chance to lose your pokémon too.</p>
-            <div id="battleField" style="position:relative; height:150px; border:1px solid #ccc; margin-bottom:10px; overflow:hidden;">
-                <img id="playerSprite" src="" style="position:absolute; bottom:0; left:10px; transform:scaleX(-1); width:80px;" />
-                <img id="enemySprite" src="" style="position:absolute; bottom:0; right:10px; width:80px;" />
+        <!-- Section combat -->
+        <div class="battle-section">
+            <h3 class="section-title">⚔️ Fighting Ring</h3>
+            <p class="battle-description">
+                You can fight to try to win 5 pokédollars, but if you lose, you have 10% chance to lose your pokémon too.
+            </p>
+            <div id="battleField" class="battlefield">
+                <img id="playerSprite" src="" class="sprite player-sprite" />
+                <img id="enemySprite" src="" class="sprite enemy-sprite" />
             </div>
-            <button id="fightBtn" style="font-weight:bold;">FIGHT !</button>
-            <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
+            <button id="fightBtn" class="fight-button">⚔️ Fight!</button>
+            <div id="battleLog" class="battle-log"></div>
         </div>
     </div>
 </div>
@@ -50,198 +71,6 @@ ViewData["Title"] = "PokeGacha";
 <audio id="fightSound" src="~/audio/fight.mp3"></audio>
 <audio id="victorySound" src="~/audio/victory.mp3"></audio>
 
-<style>
-    @@keyframes charge {
-        0%   { transform: translateX(0); }
-        50%  { transform: translateX(20px); }
-        100% { transform: translateX(0); }
-    }
-    @@keyframes chargeReverse {
-        0%   { transform: scaleX(-1) translateX(0); }
-        50%  { transform: scaleX(-1) translateX(-20px); }
-        100% { transform: scaleX(-1) translateX(0); }
-    }
-</style>
-
-@section Scripts {
-<script>
-    const game = "pokeGacha";
-    let currentPokedollar = 0;
-    let capturedPokemonIds = [];
-
-    function renderPokedex() {
-        const container = document.getElementById("pokedexGrid");
-        container.innerHTML = "";
-        container.style.display = "grid";
-        document.getElementById("pokedexLoading").style.display = "none";
-
-        for (let id = 1; id <= 151; id++) {
-            const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
-            const isCaptured = capturedPokemonIds.includes(id);
-            container.innerHTML += `
-                <img src="${spriteUrl}"
-                     style="width:50px; filter:${isCaptured ? 'none' : 'grayscale(100%)'};"
-                     alt="pokemon ${id}" />
-            `;
-        }
-    }
-
-    window.addEventListener("load", () => {
-        fetch(`/api/player/me?game=${game}`)
-            .then(res => {
-                if (res.status === 404) {
-                    return fetch("/api/player/create", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name: `${game}-player`,
-                            game: game
-                        })
-                    }).then(r => r.json());
-                } else if (!res.ok) {
-                    throw new Error("Erreur lors de la récupération du joueur");
-                } else {
-                    return res.json();
-                }
-            })
-            .then(player => {
-                document.getElementById("pokedollar").textContent = player.pokedollar;
-                currentPokedollar = player.pokedollar;
-
-                return fetch("/PokeGacha/CapturedByMe");
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Cannot load the pokédex.");
-                return res.json();
-            })
-            .then(ids => {
-                capturedPokemonIds = ids;
-                renderPokedex();
-            })
-            .catch(err => {
-                console.error(err);
-                document.getElementById("pokedexLoading").innerHTML = `<p style="color:red">Error while loading Pokédex</p>`;
-            });
-    });
-
-    const drawButton = document.getElementById("draw");
-    const loading = document.getElementById("loading");
-    const sound = document.getElementById("gachaSound");
-
-    drawButton.addEventListener("click", () => {
-        if (currentPokedollar < 10) {
-            alert("Not enough pokédollars !");
-            return;
-        }
-
-        loading.style.display = "block";
-
-        fetch(`/PokeGacha/Pull`, { method: "POST" })
-            .then(res => {
-                if (!res.ok) throw new Error("Not enough pokédollars !");
-                return res.json();
-            })
-            .then(data => {
-                sound.play();
-                const pokemon = data.pokemon;
-                const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
-
-                document.getElementById("result").innerHTML = `
-                    <div style="border:1px solid #ccc; padding:1rem; border-radius:8px;">
-                        <h3>${pokemon.name}</h3>
-                        <img src="${spriteUrl}" alt="${pokemon.name}" />
-                        <p>HP: ${pokemon.healthPoint}</p>
-                        <p>ATK: ${pokemon.strength}</p>
-                        <p>DEF: ${pokemon.defense}</p>
-                        <p>SPD: ${pokemon.speed}</p>
-                    </div>
-                `;
-
-                currentPokedollar = data.pokedollar;
-                document.getElementById("pokedollar").textContent = data.pokedollar;
-
-                fetch("/Pokemon/addPokemonToPlayer", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        pokemonId: pokemon.id,
-                        game: game
-                    })
-                })
-                    .then(() => {
-                        if (!capturedPokemonIds.includes(pokemon.id)) {
-                            capturedPokemonIds.push(pokemon.id);
-                            renderPokedex();
-                        }
-                    })
-                    .catch(err => console.error("Error association player/pokemon:", err));
-            })
-            .catch(err => alert(err.message))
-            .finally(() => loading.style.display = "none");
-    });
-
-    // combat
-    const fightBtn = document.getElementById("fightBtn");
-    const fightSound = document.getElementById("fightSound");
-    const victorySound = document.getElementById("victorySound");
-    
-    fightBtn.addEventListener("click", () => {
-        fightSound.pause();
-        fightSound.currentTime = 0;
-        fightSound.play();
-        fightBtn.disabled = true;
-        fightBtn.textContent = "Ongoing fight...";
-        document.getElementById("battleLog").innerHTML = "";
-
-        fetch("/PokeGacha/StartBattle", { method: "POST" })
-            .then(res => res.json())
-            .then(data => {
-                const logElement = document.getElementById("battleLog");
-                let i = 0;
-
-                // load sprites
-                document.getElementById("playerSprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.playerPokemonId}.png`;
-                document.getElementById("enemySprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.enemyPokemonId}.png`;
-
-                const interval = setInterval(() => {
-                    if (i >= data.history.length) {
-                        clearInterval(interval);
-                        fightBtn.disabled = false;
-                        fightBtn.textContent = "Fight !";
-                        document.getElementById("pokedollar").textContent = data.currentPokedollar;
-                        currentPokedollar = data.currentPokedollar;
-                        const lastLine = data.history[data.history.length - 1];
-                        fightSound.pause();
-                        fightSound.currentTime = 0;
-                        if (lastLine.includes("won") && lastLine.includes("style='color:green'")) {
-                            victorySound.play();
-                        }
-                        
-                        return;
-                    }
-
-                    const line = document.createElement("div");
-                    line.innerHTML = data.history[i];
-                    logElement.appendChild(line);
-                    logElement.scrollTop = logElement.scrollHeight;
-
-                    const playerStarts = data.playerStarts;
-                    if (i > 0 && !line.innerHTML.includes("won")) {
-                        if ((i % 2 === 1 && playerStarts) || (i % 2 === 0 && !playerStarts)) {
-                            const sprite = document.getElementById("playerSprite");
-                            sprite.style.animation = "chargeReverse 0.5s forwards";
-                            setTimeout(() => sprite.style.animation = "", 500);
-                        } else {
-                            const sprite = document.getElementById("enemySprite");
-                            sprite.style.animation = "charge 0.5s forwards";
-                            setTimeout(() => sprite.style.animation = "", 500);
-                        }
-                    }
-                    
-                    i++;
-                }, 1000);
-            })
-            .catch(err => alert(err.message));
-    });
-</script>
-}
+<script type="module" src="~/js/pokegacha/main.js"></script>
+</body>
+</html>

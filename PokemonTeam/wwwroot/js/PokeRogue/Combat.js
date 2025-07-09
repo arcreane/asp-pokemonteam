@@ -38,7 +38,11 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     /* 2.a → Team joueur et team ennemie */
     const playerTeam = all.filter(p => teamNames.includes(p.name));
-    const enemyTeam  = shuffle([...all]).slice(0, 3);
+    /* 2) Équipe ennemie  -----------------------------------------------
+   - on retire d’abord les noms déjà présents chez le joueur
+   - on mélange, puis on prend les 3 premiers */
+    const enemyPool  = all.filter(p => !teamNames.includes(p.name)); // ⬅️ exclusion
+    const enemyTeam  = shuffle(enemyPool).slice(0, 3);
 
     /* 2.b → Ajoute le sprite à chaque Pokémon (PokeAPI) */
     await addSprites([...playerTeam, ...enemyTeam]);

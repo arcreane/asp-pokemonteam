@@ -9,7 +9,8 @@ async function loadAllPokemon() {
         const res = await fetch('/Pokemon/getAllPokemon');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const pokemons = await res.json();
-
+        console.log(pokemons);
+        pokemons.sort((a, b) => a.id - b.id);
         pokemons.forEach(pokemon => {
             createPokemonCard(pokemon.name);
         });

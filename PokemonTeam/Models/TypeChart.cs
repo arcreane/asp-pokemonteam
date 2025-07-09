@@ -36,12 +36,9 @@ namespace PokemonTeam.Models;
 [Table("type")]
 public class TypeChart
 {
-    
     public int id { get;  set; }
     public string typeName { get;  set; }
-    
     public decimal fire { get;  set; }
-    
     public decimal normal { get;  set; }
     public decimal water { get;  set; }
     public decimal grass { get;  set; }

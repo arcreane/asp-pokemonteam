@@ -60,6 +60,7 @@ h3 { font-size: 1.5rem; }
     width: 1600px;
     height: 600px;
     margin: 30px auto;
+    margin-left: -90px;
     overflow: hidden;
     border-radius: 20px;
     box-shadow: var(--shadow-xl);
