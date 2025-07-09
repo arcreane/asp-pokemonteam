@@ -8,17 +8,18 @@ using PokemonTeam.Models;
 using PokemonTeam.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-// Pour stocker l'état du quiz en session mémoire
+builder.Services.AddHttpClient<PokeApiService>();
+// Pour stocker l'Ã©tat du quiz en session mÃ©moire
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    // durée de session par défaut
+    // durÃ©e de session par dÃ©faut
     options.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
-// Permet l’injection de IHttpContextAccessor dans vos contrôleurs
+// Permet lâ€™injection de IHttpContextAccessor dans vos contrÃ´leurs
 builder.Services.AddHttpContextAccessor();
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -1,80 +1,92 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PokemonTeam</title>
+    <title>@ViewData["Title"] - MultiApp</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- CSS spécifiques aux apps, à étendre selon les besoins -->
     <link rel="stylesheet" href="~/css/PariPoke.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/PokemonTeam.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/PokeGacha.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/PokeWare.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-<header>
-    <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-        <div class="container-fluid">
-            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PokemonTeam</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Accueil</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarMain" aria-controls="navbarMain"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                <ul class="navbar-nav flex-grow-1">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="PariPoke" asp-action="">PariPoke</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="PokeGacha" asp-action="">PokeGacha</a>
-                    </li>
-                </ul>
+                <div class="collapse navbar-collapse" id="navbarMain">
+                    <ul class="navbar-nav me-auto mb-2 mb-sm-0">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="PariPoke" asp-action="Index">PariPoke</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="PokeGacha" asp-action="Index">PokeGacha</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="PokeWare" asp-action="SelectTeam">PokeWare</a>
+                        </li>
+                    </ul>
 
-                <!-- Bloc Auth -->
-                <div class="d-flex align-items-center">
-                    <!-- Zone boutons Connexion/Inscription -->
-                    <div id="auth-buttons">
-                        <button class="btn btn-outline-primary me-2" onclick="window.location.href='/AuthPage'">Connexion</button>
-                        <button class="btn btn-primary" onclick="window.location.href='/AuthPage'">Inscription</button>
-                    </div>
-
-                    <!-- Zone Player connecté -->
-                    <span id="player-info" class="me-3"></span>
-
-                    <!-- Déconnexion -->
-                    <div id="logout-section" style="display:none;">
-                        <button id="logout-btn" class="btn btn-danger">Déconnexion</button>
-                    </div>
+                    <ul class="navbar-nav mb-2 mb-sm-0">
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item me-2">
+                                <span class="navbar-text">
+                                    Bonjour, @User.Identity.Name
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form class="d-inline" asp-controller="Auth" asp-action="Logout" method="post">
+                                    <button type="submit" class="btn btn-outline-danger">Déconnexion</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item me-2">
+                                <a class="btn btn-outline-primary" asp-controller="AuthPage" asp-action="Login">Connexion</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary" asp-controller="AuthPage" asp-action="Register">Inscription</a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
-        </div>
-    </nav>
-</header>
+        </nav>
+    </header>
 
-<div class="container">
-    <main role="main" class="pb-3">
-        @RenderBody()
-    </main>
-</div>
-
-<footer class="border-top footer text-muted">
     <div class="container">
-        &copy; 2025 - PokemonTeam - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
-</footer>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/PlayerProfileHeader.js"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", required: false)
 
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2025 – MultiApp
+        </div>
+    </footer>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/PlayerProfileHeader.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
-
 </html>
