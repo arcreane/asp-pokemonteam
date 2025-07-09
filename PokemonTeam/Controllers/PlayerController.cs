@@ -23,13 +23,10 @@ public class PlayerController : Controller
     public async Task<IActionResult> GetMyPlayer([FromQuery] string game)
     {
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-
         var player = await _context.Players
             .Include(p => p.UserAuth)
             .FirstOrDefaultAsync(p => p.UserAuth.Email == email && p.Game == game);
-
         if (player == null) return NotFound();
-
         return Ok(player);
     }
 
