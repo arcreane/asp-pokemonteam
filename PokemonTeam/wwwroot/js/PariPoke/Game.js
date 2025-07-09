@@ -8,6 +8,8 @@ const paths = [
 ];
 
 const victorySound = document.getElementById('victorySound');
+const startSound = document.getElementById('startSound');
+
 
 const baseLengths = paths.map(p => p.getTotalLength());
 const minLength = Math.min(...baseLengths);
@@ -21,6 +23,13 @@ document.getElementById('startRace').addEventListener('click', async () => {
         alert("Sélectionne 4 coureurs avant de démarrer !");
         return;
     }
+    if (startSound) {
+        startSound.currentTime = 0;
+        startSound.play().catch(err => {
+            console.warn('Impossible de jouer le son de démarrage :', err);
+        });
+    }
+
 
     const selectedPokemon = document.getElementById('selectedBetPokemon').value.trim();
     const betAmount = parseInt(document.getElementById('betAmount').value, 10);
@@ -185,6 +194,10 @@ document.getElementById('startRace').addEventListener('click', async () => {
             if (victorySound) {
                 // Certains navigateurs n'autorisent play() que
                 // si l'utilisateur a déjà interagi (clic, touche…).
+                if (startSound) {
+                    startSound.pause();          // stoppe la lecture
+                    startSound.currentTime = 0;  // revient au début
+                }
                 victorySound.currentTime = 0;
                 victorySound.play().catch(err => {
                     console.warn('Impossible de jouer le son de victoire :', err);
