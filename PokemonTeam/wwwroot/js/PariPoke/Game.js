@@ -7,6 +7,8 @@ const paths = [
     document.getElementById('trackPath4')
 ];
 
+const victorySound = document.getElementById('victorySound');
+
 const baseLengths = paths.map(p => p.getTotalLength());
 const minLength = Math.min(...baseLengths);
 const track = document.getElementById('raceContainer');
@@ -179,6 +181,15 @@ document.getElementById('startRace').addEventListener('click', async () => {
                 : `Dommage, tu perds ton pari.`;
 
             document.getElementById('victoryPopup').style.display = 'block';
+
+            if (victorySound) {
+                // Certains navigateurs n'autorisent play() que
+                // si l'utilisateur a déjà interagi (clic, touche…).
+                victorySound.currentTime = 0;
+                victorySound.play().catch(err => {
+                    console.warn('Impossible de jouer le son de victoire :', err);
+                });
+            }
 
             if (gain > 0) {
                 fetch('/PariPoke/win', {
