@@ -1,47 +1,401 @@
-@{
-ViewData["Title"] = "PokeGacha";
-}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéGacha</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<div style="display: flex; height: 100vh;">
-    <!-- gauche -->
-    <div style="flex: 2; padding: 1rem; border-right: 2px solid #ddd;">
-        <h1>POKEGACHA</h1>
-        <h2>Gotta Catch Them All!</h2>
-        <div style="margin-bottom:10px;">
-            <strong>Pokédollars : <span id="pokedollar">-</span></strong><br/>
-            <small>Pull price : 10 pokédollars</small>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+        }
+
+        /* Section gauche */
+        .left-panel {
+            flex: 2;
+            padding: 2rem;
+            background: white;
+            border-right: 3px solid #e8ecf4;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .currency-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .currency-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .pull-price {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .draw-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin: 2rem auto;
+            padding: 1rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .draw-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .draw-button:active {
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .result {
+            margin-top: 2rem;
+        }
+
+        .pokemon-card {
+            background: white;
+            border: 2px solid #e8ecf4;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .pokemon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .pokemon-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            text-transform: capitalize;
+        }
+
+        .pokemon-image {
+            width: 120px;
+            height: 120px;
+            margin: 1rem auto;
+            display: block;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+        }
+
+        .pokemon-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 0.3rem;
+        }
+
+        /* Section droite */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .pokedex-section {
+            flex: 1;
+            padding: 2rem;
+            border-bottom: 3px solid #e8ecf4;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .pokedex-loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .pokedex-loading img {
+            width: 60px;
+            margin-bottom: 1rem;
+        }
+
+        .pokedex-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            display: none;
+        }
+
+        .pokedex-sprite {
+            width: 100%;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #f8f9fa;
+            padding: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .pokedex-sprite:hover {
+            transform: scale(1.1);
+            background: #e9ecef;
+        }
+
+        /* Section combat */
+        .battle-section {
+            flex: 1;
+            padding: 2rem;
+            background: white;
+        }
+
+        .battle-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .battlefield {
+            position: relative;
+            height: 150px;
+            border: 2px solid #e8ecf4;
+            border-radius: 15px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .battlefield::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.6) 100%);
+        }
+
+        .sprite {
+            position: absolute;
+            bottom: 10px;
+            width: 80px;
+            height: 80px;
+            z-index: 1;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+
+        .player-sprite {
+            left: 20px;
+            transform: scaleX(-1);
+        }
+
+        .enemy-sprite {
+            right: 20px;
+        }
+
+        .fight-button {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
+            text-transform: uppercase;
+        }
+
+        .fight-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .fight-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .battle-log {
+            margin-top: 1rem;
+            overflow-y: auto;
+            max-height: 150px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            border: 1px solid #e8ecf4;
+        }
+
+        .battle-log div {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        /* Animations */
+        @@keyframes charge {
+            0%   { transform: translateX(0); }
+            50%  { transform: translateX(20px); }
+            100% { transform: translateX(0); }
+        }
+
+        @@keyframes chargeReverse {
+            0%   { transform: scaleX(-1) translateX(0); }
+            50%  { transform: scaleX(-1) translateX(-20px); }
+            100% { transform: scaleX(-1) translateX(0); }
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+        .container {
+            flex-direction: column;
+            height: auto;
+        }
+
+        .left-panel {
+            border-right: none;
+            border-bottom: 3px solid #e8ecf4;
+        }
+
+        .pokedex-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Section gauche -->
+    <div class="left-panel">
+        <div class="logo">
+            <img src="~/Image/pokegacha-logo.png" alt="PokéGacha logo" width="300px"/>
+            </div>
+        <h2 class="subtitle">Gotta Catch Them All!</h2>
+
+        <div class="currency-info">
+            <div class="currency-amount">
+                💰 Pokédollars : <span id="pokedollar">-</span>
+            </div>
+            <div class="pull-price">Pull price : 10 pokédollars</div>
         </div>
-        <button id="draw" style="border:none; background:none;">
-            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" />
+
+        <button id="draw" class="draw-button">
+            <img src="https://assets-v2.lottiefiles.com/a/ae47ca2c-bd64-11ef-8a23-cfbc45d0a788/HgjuHFgI6d.gif" alt="Pokeball" width="80" class="pulse"/>
         </button>
-        <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;" />
-        <div id="result" style="margin-top: 20px;"></div>
+
+        <div class="loading">
+            <img id="loading" src="https://i.gifer.com/VAyR.gif" style="display:none; width:50px;"/>
+        </div>
+
+        <div id="result" class="result"></div>
     </div>
 
-    <!-- droite -->
-    <div style="flex: 1; display: flex; flex-direction: column;">
-        <!-- pokedex -->
-        <div id="pokedex" style="flex: 1; overflow-y:auto; border-bottom: 2px solid #ddd; padding:1rem;">
-            <h3>Pokédex</h3>
-            <div id="pokedexLoading" style="text-align:center;">
-                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading" style="width:60px;"/>
+    <!-- Section droite -->
+    <div class="right-panel">
+        <!-- Pokédex -->
+        <div class="pokedex-section">
+            <h3 class="section-title">📚 Pokédex</h3>
+            <div id="pokedexLoading" class="pokedex-loading">
+                <img src="https://i.gifer.com/ZZ5H.gif" alt="loading"/>
                 <p>Pokédex is loading...</p>
             </div>
-            <div id="pokedexGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; display:none;">
+            <div id="pokedexGrid" class="pokedex-grid">
                 <!-- sprites -->
             </div>
         </div>
 
-        <!-- module de combat -->
-        <div id="future" style="flex: 1; padding: 1rem;">
-            <h3>Fighting ring</h3>
-            <p>You can fight to try to win 5 pokédollars, but if you lose, you have 10% chance to lose your pokémon too.</p>
-            <div id="battleField" style="position:relative; height:150px; border:1px solid #ccc; margin-bottom:10px; overflow:hidden;">
-                <img id="playerSprite" src="" style="position:absolute; bottom:0; left:10px; transform:scaleX(-1); width:80px;" />
-                <img id="enemySprite" src="" style="position:absolute; bottom:0; right:10px; width:80px;" />
+        <!-- Section combat -->
+        <div class="battle-section">
+            <h3 class="section-title">⚔️ Fighting Ring</h3>
+            <p class="battle-description">
+                You can fight to try to win 5 pokédollars, but if you lose, you have 10% chance to lose your pokémon too.
+            </p>
+            <div id="battleField" class="battlefield">
+                <img id="playerSprite" src="" class="sprite player-sprite" />
+                <img id="enemySprite" src="" class="sprite enemy-sprite" />
             </div>
-            <button id="fightBtn" style="font-weight:bold;">FIGHT !</button>
-            <div id="battleLog" style="margin-top:10px; overflow-y:auto; max-height:150px;"></div>
+            <button id="fightBtn" class="fight-button">⚔️ Fight!</button>
+            <div id="battleLog" class="battle-log"></div>
         </div>
     </div>
 </div>
@@ -50,20 +404,6 @@ ViewData["Title"] = "PokeGacha";
 <audio id="fightSound" src="~/audio/fight.mp3"></audio>
 <audio id="victorySound" src="~/audio/victory.mp3"></audio>
 
-<style>
-    @@keyframes charge {
-        0%   { transform: translateX(0); }
-        50%  { transform: translateX(20px); }
-        100% { transform: translateX(0); }
-    }
-    @@keyframes chargeReverse {
-        0%   { transform: scaleX(-1) translateX(0); }
-        50%  { transform: scaleX(-1) translateX(-20px); }
-        100% { transform: scaleX(-1) translateX(0); }
-    }
-</style>
-
-@section Scripts {
 <script>
     const game = "pokeGacha";
     let currentPokedollar = 0;
@@ -79,10 +419,11 @@ ViewData["Title"] = "PokeGacha";
             const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
             const isCaptured = capturedPokemonIds.includes(id);
             container.innerHTML += `
-                <img src="${spriteUrl}"
-                     style="width:50px; filter:${isCaptured ? 'none' : 'grayscale(100%)'};"
-                     alt="pokemon ${id}" />
-            `;
+                    <img src="${spriteUrl}"
+                         class="pokedex-sprite"
+                         style="filter:${isCaptured ? 'none' : 'grayscale(100%)'}"
+                         alt="pokemon ${id}" />
+                `;
         }
     }
 
@@ -147,15 +488,29 @@ ViewData["Title"] = "PokeGacha";
                 const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`;
 
                 document.getElementById("result").innerHTML = `
-                    <div style="border:1px solid #ccc; padding:1rem; border-radius:8px;">
-                        <h3>${pokemon.name}</h3>
-                        <img src="${spriteUrl}" alt="${pokemon.name}" />
-                        <p>HP: ${pokemon.healthPoint}</p>
-                        <p>ATK: ${pokemon.strength}</p>
-                        <p>DEF: ${pokemon.defense}</p>
-                        <p>SPD: ${pokemon.speed}</p>
-                    </div>
-                `;
+                        <div class="pokemon-card">
+                            <h3 class="pokemon-name">${pokemon.name}</h3>
+                            <img src="${spriteUrl}" alt="${pokemon.name}" class="pokemon-image" />
+                            <div class="pokemon-stats">
+                                <div class="stat-item">
+                                    <div class="stat-label">HP</div>
+                                    <div class="stat-value">${pokemon.healthPoint}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">ATK</div>
+                                    <div class="stat-value">${pokemon.strength}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">DEF</div>
+                                    <div class="stat-value">${pokemon.defense}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">SPD</div>
+                                    <div class="stat-value">${pokemon.speed}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
 
                 currentPokedollar = data.pokedollar;
                 document.getElementById("pokedollar").textContent = data.pokedollar;
@@ -180,17 +535,17 @@ ViewData["Title"] = "PokeGacha";
             .finally(() => loading.style.display = "none");
     });
 
-    // combat
+    // Combat
     const fightBtn = document.getElementById("fightBtn");
     const fightSound = document.getElementById("fightSound");
     const victorySound = document.getElementById("victorySound");
-    
+
     fightBtn.addEventListener("click", () => {
         fightSound.pause();
         fightSound.currentTime = 0;
         fightSound.play();
         fightBtn.disabled = true;
-        fightBtn.textContent = "Ongoing fight...";
+        fightBtn.textContent = "⚔️ Ongoing fight...";
         document.getElementById("battleLog").innerHTML = "";
 
         fetch("/PokeGacha/StartBattle", { method: "POST" })
@@ -199,7 +554,7 @@ ViewData["Title"] = "PokeGacha";
                 const logElement = document.getElementById("battleLog");
                 let i = 0;
 
-                // load sprites
+                // Load sprites
                 document.getElementById("playerSprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.playerPokemonId}.png`;
                 document.getElementById("enemySprite").src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${data.enemyPokemonId}.png`;
 
@@ -207,7 +562,7 @@ ViewData["Title"] = "PokeGacha";
                     if (i >= data.history.length) {
                         clearInterval(interval);
                         fightBtn.disabled = false;
-                        fightBtn.textContent = "Fight !";
+                        fightBtn.textContent = "⚔️ Fight!";
                         document.getElementById("pokedollar").textContent = data.currentPokedollar;
                         currentPokedollar = data.currentPokedollar;
                         const lastLine = data.history[data.history.length - 1];
@@ -216,7 +571,7 @@ ViewData["Title"] = "PokeGacha";
                         if (lastLine.includes("won") && lastLine.includes("style='color:green'")) {
                             victorySound.play();
                         }
-                        
+
                         return;
                     }
 
@@ -237,11 +592,12 @@ ViewData["Title"] = "PokeGacha";
                             setTimeout(() => sprite.style.animation = "", 500);
                         }
                     }
-                    
+
                     i++;
                 }, 1000);
             })
             .catch(err => alert(err.message));
     });
 </script>
-}
+</body>
+</html>
