@@ -7,11 +7,8 @@ public class Player
     public string Game { get; set; } = string.Empty;
     public int Pokedollar { get; set; } = 0;
     public int Experience { get; set; } = 0;
-    
     public int fk_user_auth { get; set; }
     public UserAuthModel? UserAuth { get; set; }
-
     public List<Pokemon> Pokemons { get; set; } = new();
     public ICollection<Item> Items { get; set; } = new List<Item>();
-
 }
